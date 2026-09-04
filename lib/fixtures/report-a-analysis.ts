@@ -1,0 +1,246 @@
+import { parseAnalysisResponse } from "@/lib/analysis";
+import type { AnalysisResponse } from "@/types/analytical-input";
+
+/**
+ * TEMPORARY DEVELOPMENT FIXTURE — Report A (Clean).
+ *
+ * Stands in for live Claude output until BUILD-3 replaces it with real
+ * inference. It is development data, NOT ground truth: `Ground_Truth.jsonl`
+ * stays eval-only and is never read by the running UI.
+ *
+ * Every `source.text` is copied verbatim from `03_Sample_Data/Report_A_Clean.md`,
+ * Markdown emphasis included, so BUILD-4 can match evidence against the report
+ * body exactly.
+ */
+const REPORT_A_FIXTURE: unknown = {
+  inputs: [
+    {
+      input_id: "ai_a_001",
+      metric: "Revenue",
+      source_label: "Revenue",
+      value: 82.0,
+      unit: "USD_millions",
+      currency: "USD",
+      period: "FY2024",
+      temporal_type: "actual",
+      basis: "reported",
+      precision: "exact",
+      range: null,
+      source: {
+        document_id: "report_a_clean",
+        page: null,
+        section: "Financial Performance",
+        text: "Revenue increased from **$82.0 million in FY2024** to **$101.0 million in FY2025**.",
+      },
+      evidence_type: "direct",
+      conflict_state: "none",
+      trust_state: "auto",
+      materiality: "high",
+      confidence: 0.97,
+      resolved: true,
+      notes: null,
+      user_correction: null,
+    },
+    {
+      input_id: "ai_a_002",
+      metric: "Revenue",
+      source_label: "Revenue",
+      value: 101.0,
+      unit: "USD_millions",
+      currency: "USD",
+      period: "FY2025",
+      temporal_type: "actual",
+      basis: "reported",
+      precision: "exact",
+      range: null,
+      source: {
+        document_id: "report_a_clean",
+        page: null,
+        section: "Financial Performance",
+        text: "Revenue increased from **$82.0 million in FY2024** to **$101.0 million in FY2025**.",
+      },
+      evidence_type: "direct",
+      conflict_state: "none",
+      trust_state: "auto",
+      materiality: "high",
+      confidence: 0.97,
+      resolved: true,
+      notes: null,
+      user_correction: null,
+    },
+    {
+      input_id: "ai_a_003",
+      metric: "Gross Profit",
+      source_label: "gross profit",
+      value: 62.0,
+      unit: "USD_millions",
+      currency: "USD",
+      period: "FY2025",
+      temporal_type: "actual",
+      basis: "reported",
+      precision: "exact",
+      range: null,
+      source: {
+        document_id: "report_a_clean",
+        page: null,
+        section: "Financial Performance",
+        text: "FY2025 gross profit was **$62.0 million**, and adjusted EBITDA was **$18.6 million**.",
+      },
+      evidence_type: "direct",
+      conflict_state: "none",
+      trust_state: "auto",
+      materiality: "high",
+      confidence: 0.96,
+      resolved: true,
+      notes: null,
+      user_correction: null,
+    },
+    {
+      input_id: "ai_a_004",
+      metric: "EBITDA",
+      source_label: "adjusted EBITDA",
+      value: 18.6,
+      unit: "USD_millions",
+      currency: "USD",
+      period: "FY2025",
+      temporal_type: "actual",
+      basis: "adjusted",
+      precision: "exact",
+      range: null,
+      source: {
+        document_id: "report_a_clean",
+        page: null,
+        section: "Financial Performance",
+        text: "FY2025 gross profit was **$62.0 million**, and adjusted EBITDA was **$18.6 million**.",
+      },
+      evidence_type: "direct",
+      conflict_state: "none",
+      trust_state: "auto",
+      materiality: "high",
+      confidence: 0.95,
+      resolved: true,
+      notes: "Report A states only an adjusted basis; no reported EBITDA is given.",
+      user_correction: null,
+    },
+    {
+      input_id: "ai_a_005",
+      metric: "Cash",
+      source_label: "cash",
+      value: 30.0,
+      unit: "USD_millions",
+      currency: "USD",
+      period: "FY2025",
+      temporal_type: "actual",
+      basis: "reported",
+      precision: "exact",
+      range: null,
+      source: {
+        document_id: "report_a_clean",
+        page: null,
+        section: "Financial Performance",
+        text: "At FY2025 year-end, Northstar held **$30.0 million of cash** and **$125.0 million of total debt**.",
+      },
+      evidence_type: "direct",
+      conflict_state: "none",
+      trust_state: "auto",
+      materiality: "high",
+      confidence: 0.96,
+      resolved: true,
+      notes: "Balance-sheet value stated at FY2025 year-end.",
+      user_correction: null,
+    },
+    {
+      input_id: "ai_a_006",
+      metric: "Total Debt",
+      source_label: "total debt",
+      value: 125.0,
+      unit: "USD_millions",
+      currency: "USD",
+      period: "FY2025",
+      temporal_type: "actual",
+      basis: "reported",
+      precision: "exact",
+      range: null,
+      source: {
+        document_id: "report_a_clean",
+        page: null,
+        section: "Financial Performance",
+        text: "At FY2025 year-end, Northstar held **$30.0 million of cash** and **$125.0 million of total debt**.",
+      },
+      evidence_type: "direct",
+      conflict_state: "none",
+      trust_state: "auto",
+      materiality: "high",
+      confidence: 0.96,
+      resolved: true,
+      notes: "Balance-sheet value stated at FY2025 year-end.",
+      user_correction: null,
+    },
+    {
+      input_id: "ai_a_007",
+      metric: "Enterprise Value",
+      source_label: "enterprise value",
+      value: 650.0,
+      unit: "USD_millions",
+      currency: "USD",
+      period: "FY2025",
+      temporal_type: "actual",
+      basis: "not_applicable",
+      precision: "exact",
+      range: null,
+      source: {
+        document_id: "report_a_clean",
+        page: null,
+        section: "Financial Performance",
+        text: "The company's enterprise value at the report date was **$650.0 million**.",
+      },
+      evidence_type: "direct",
+      conflict_state: "none",
+      trust_state: "auto",
+      materiality: "high",
+      confidence: 0.94,
+      resolved: true,
+      notes:
+        "Stated as of the report date rather than a fiscal period close. A reported/adjusted accounting basis does not apply to enterprise value.",
+      user_correction: null,
+    },
+  ],
+  insights: [
+    {
+      id: "in_a_001",
+      category: "business",
+      label: "Recurring revenue mix",
+      summary:
+        "Roughly three-quarters of FY2025 revenue is recurring subscription revenue.",
+      sourceText:
+        "Approximately 72% of FY2025 revenue was recurring.",
+    },
+    {
+      id: "in_a_002",
+      category: "risk",
+      label: "Customer concentration",
+      summary:
+        "The three largest customers account for 28% of FY2025 revenue, a moderate concentration risk.",
+      sourceText:
+        "The three largest customers represented **28% of FY2025 revenue**, creating moderate customer-concentration risk.",
+    },
+    {
+      id: "in_a_003",
+      category: "timeline",
+      label: "Enterprise module launch",
+      summary:
+        "Management plans to launch a new enterprise analytics module in Q2 2026.",
+      sourceText:
+        "Management plans to launch a new enterprise analytics module in **Q2 2026**.",
+    },
+  ],
+};
+
+/**
+ * Validated at module load. If the fixture ever violates the schema, the dev
+ * server and `npm run build` fail loudly instead of rendering bad analysis.
+ */
+export const reportAAnalysis: AnalysisResponse = parseAnalysisResponse(
+  REPORT_A_FIXTURE,
+  "lib/fixtures/report-a-analysis.ts",
+);

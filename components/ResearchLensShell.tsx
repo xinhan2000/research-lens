@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
+import InterpretationList from "@/components/InterpretationList";
 import ReportViewer from "@/components/ReportViewer";
+import type { AnalysisResponse } from "@/types/analytical-input";
 import type { SampleReport } from "@/types/report";
 
 /** Static for BUILD-1. Lens filtering arrives in BUILD-8. */
@@ -10,12 +12,16 @@ const LENSES = ["All", "Financials", "Risks", "Timeline", "Assumptions"];
 
 export default function ResearchLensShell({
   reports,
+  analysisByReportId,
 }: {
   reports: SampleReport[];
+  /** Validated interpretation per report. BUILD-2 supplies Report A only. */
+  analysisByReportId: Record<string, AnalysisResponse>;
 }) {
   const [selectedId, setSelectedId] = useState(reports[0]?.id ?? "");
 
   const selected = reports.find((r) => r.id === selectedId) ?? reports[0];
+  const analysis = analysisByReportId[selected.id] ?? null;
 
   return (
     <div className="shell">
@@ -91,10 +97,7 @@ export default function ResearchLensShell({
 
         <section className="panel panel-analysis" aria-label="Analysis and skills">
           <h2 className="panel-title">Analysis / Skills</h2>
-          <p className="placeholder">
-            Interpreted analytical inputs, trust state, and deterministic skill
-            results appear here once analysis is implemented.
-          </p>
+          <InterpretationList analysis={analysis} />
         </section>
       </main>
     </div>

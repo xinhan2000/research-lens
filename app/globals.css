@@ -270,3 +270,139 @@ button:disabled {
 .report th:not(:first-child) {
   text-align: right;
 }
+
+/* ------------------------------------------------------------------ *
+ * BUILD-2 — interpretation list (right panel)
+ * ------------------------------------------------------------------ */
+
+.fixture-note {
+  margin: 0 0 12px;
+  padding: 7px 9px;
+  border: 1px dashed var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.interp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.interp {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.interp:hover {
+  border-color: #b9c0ca;
+}
+
+.interp-selected {
+  border-color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.interp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.interp-metric {
+  font-weight: 600;
+}
+
+.interp-source-label {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.interp-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.interp-meta {
+  display: flex;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.interp-period {
+  font-variant-numeric: tabular-nums;
+}
+
+.interp-qualifiers::before {
+  content: "·";
+  margin-right: 8px;
+}
+
+/* Trust state. Internal state is shown alongside the analyst-facing wording
+   so the contract stays visible during the demo. */
+
+.trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.trust-word {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+
+.trust-auto {
+  border-color: #b9d3b2;
+  background: #f1f8ef;
+  color: #2f6b34;
+}
+
+.trust-ask {
+  border-color: #e0c68a;
+  background: #fdf7e8;
+  color: #8a6116;
+}
+
+.trust-abstain,
+.trust-never {
+  border-color: #d8b6b6;
+  background: #fbf1f1;
+  color: #8c3b3b;
+}
+
+.panel-footnote {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+}
