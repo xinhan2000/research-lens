@@ -16,6 +16,7 @@ depends_on:
   - sample_report_spec
   - competitor_alternatives
   - approaches_considered
+  - ai_only_baseline_comparison
 used_by:
   - prototype
   - ai_build_prompts
@@ -159,7 +160,11 @@ The prototype supports:
 - `READY / NEEDS_REVIEW / BLOCKED`;
 - analyst correction;
 - downstream recalculation;
-- BYOK Anthropic API configuration.
+- BYOK Anthropic API configuration;
+- optional on-demand AI-only baseline comparison for EV / EBITDA.
+
+The last item is a demo comparison control, not trusted downstream analysis.
+It is displayed beside the Deterministic Skill and never feeds it.
 
 The prototype must run:
 
@@ -498,6 +503,29 @@ Revenue Growth
 READY
 23.2%
 ```
+
+---
+
+## J7A — Compare with AI-only baseline
+
+Optional. The analyst selects:
+
+```text
+Compare with AI-only
+```
+
+The application makes one separate Claude request using the original report
+directly, without Research Lens interpretations or skill results.
+
+The response is labeled:
+
+```text
+UNVERIFIED
+```
+
+and shown beside the Deterministic Skill for visual comparison.
+
+It cannot change skill inputs, skill state, or the deterministic result.
 
 ---
 
@@ -911,6 +939,32 @@ returns the same result for the same valid inputs.
 
 ---
 
+# 20A. AI-Only Baseline Comparison
+
+An optional demo comparison places a raw model answer beside a Deterministic
+Skill result.
+
+Rules:
+
+- EV / EBITDA only for MVP;
+- on-demand — never automatic;
+- a separate model call on a separate path;
+- the result is unverified;
+- displayed side by side with the Deterministic Skill;
+- never a skill input;
+- never a fallback for `BLOCKED` or `NEEDS_REVIEW`.
+
+Core UI idea:
+
+```text
+AI-only baseline   |   Deterministic Skill
+```
+
+Detailed styling is not prescribed here. See
+`05_Product_Decisions/AI_Only_Baseline_Comparison.md`.
+
+---
+
 # 21. AI Interpretation Contract
 
 Claude should return structured JSON compatible with the `AnalyticalInput` schema.
@@ -1107,6 +1161,16 @@ It is used only for:
 
 ---
 
+## AI-only baseline
+
+The AI-only baseline is also live Claude inference, but it sits deliberately
+outside the trusted interpretation and skill path.
+
+It must not use Ground Truth, and its output never becomes an
+`AnalyticalInput` or a skill result.
+
+---
+
 # 27. Demo Reliability
 
 The working demo should use real inference.
@@ -1282,6 +1346,22 @@ Application is deployable to Fly.io.
 
 Public deployment requires no login.
 
+## FR-21
+
+User can explicitly request an AI-only EV / EBITDA baseline comparison.
+
+## FR-22
+
+AI-only baseline is visually labeled `UNVERIFIED`.
+
+## FR-23
+
+AI-only baseline cannot change Deterministic Skill inputs, state, or result.
+
+## FR-24
+
+The comparison request does not run automatically.
+
 ---
 
 # 31. Non-Functional Requirements
@@ -1396,6 +1476,24 @@ The system either:
 - visibly fails.
 
 It should not silently create a confidently precise unsupported result.
+
+---
+
+## SC-6 — AI-only Comparison
+
+Using Report A (Clean):
+
+The raw AI answer can be compared side by side with a `READY` deterministic
+result.
+
+Using Report C (Conflict):
+
+The raw AI answer can be compared with `NEEDS_REVIEW` and no deterministic
+result.
+
+This criterion does **not** require the AI baseline to be wrong. Matching
+numbers are a pass; the comparison is about provenance and execution
+guarantees, not about the model failing.
 
 ---
 
@@ -1535,6 +1633,19 @@ Implement:
 
 ---
 
+## BUILD-5.5 — AI-only baseline comparison
+
+Implement:
+
+- EV / EBITDA only;
+- on-demand, never automatic;
+- a separate API path;
+- a raw, unverified result;
+- side-by-side comparison with the Deterministic Skill;
+- no trusted-state mutation.
+
+---
+
 ## BUILD-6 — Conflict flow
 
 Implement Report C behavior:
@@ -1628,10 +1739,15 @@ If implementation time becomes constrained, prioritize in this order:
 5. Deterministic calculations
 6. Report C conflict gating
 7. User resolution
-8. Correction/recalculation
-9. Lenses
-10. Semantic navigation polish
+8. AI-only baseline comparison
+9. Correction/recalculation
+10. Lenses
+11. Semantic navigation polish
 ```
+
+The AI-only comparison is deliberately ranked below evidence, semantic
+qualifiers, and deterministic skill gating. It illustrates the trusted path's
+value; it is not part of it.
 
 The demo is successful even if later visual polish is limited.
 
@@ -1690,3 +1806,4 @@ If asked why the prototype is intentionally small:
 | MVP-3 | Skill gating is deterministic |
 | MVP-4 | User corrections invalidate downstream results |
 | MVP-5 | Demo simplicity outweighs production architecture |
+| MVP-6 | AI-only EV / EBITDA baseline is an unverified, on-demand demo comparison and never feeds trusted execution |

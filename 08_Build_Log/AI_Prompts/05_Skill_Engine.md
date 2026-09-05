@@ -164,7 +164,24 @@ Display skill cards with:
 - reason if NEEDS_REVIEW/BLOCKED;
 - inputs/formula where useful.
 
+Build a clear Deterministic Skills section.
+
+Keep `SkillResult` data and state composable, so a later comparison UI can
+place the EV / EBITDA card beside an AI-only baseline without restructuring it.
+A self-contained skill card is the goal.
+
 Do not implement conflict resolution yet. That is BUILD-6.
+
+Do not build the comparison endpoint or the comparison button in BUILD-5.
+
+Do not make Skill logic depend on the future baseline in any way — no optional
+baseline field, no placeholder slot, no conditional branch.
+
+## Out of scope
+
+- AI-only baseline comparison — that is **BUILD-5.5**;
+- conflict-resolution controls — BUILD-6;
+- correction flow — BUILD-7.
 
 ## Acceptance criteria
 
@@ -174,6 +191,8 @@ Do not implement conflict resolution yet. That is BUILD-6.
 4. Unsafe inputs do not produce a numerical result.
 5. Tests pass.
 6. TypeScript/build passes.
+7. The EV / EBITDA skill card is self-contained, so BUILD-5.5 can compose it
+   into a side-by-side comparison without changing skill logic or state.
 
 ## At completion
 

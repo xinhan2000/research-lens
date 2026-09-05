@@ -1,11 +1,12 @@
 ---
 artifact_id: prototype_build_plan
 product: Research Lens
-version: 0.1
+version: 0.2
 status: approved_baseline
 last_updated: 2026-09-04
 depends_on:
   - PRD.md
+  - AI_Only_Baseline_Comparison.md
   - Semantic_Input_Schema.md
   - Deterministic_Skill_Spec.md
   - Autonomy_Policy.md
@@ -16,6 +17,7 @@ used_by:
   - 03_Claude_Integration.md
   - 04_Evidence_UI.md
   - 05_Skill_Engine.md
+  - 05_5_AI_Only_Comparison.md
   - 06_Conflict_Flow.md
   - 07_Correction_Flow.md
   - 08_Lenses_and_Navigation.md
@@ -60,6 +62,8 @@ Primary implementation priorities:
 - External research: none
 - Vector database / RAG: none
 - Agent framework: none unless a concrete blocker appears
+- AI-only comparison: on-demand EV / EBITDA baseline only
+- Comparison is isolated from trusted Skill execution
 
 ## 3. Repository Assumption
 
@@ -159,6 +163,7 @@ The prototype should say:
 - user resolution of Report C conflict;
 - user correction;
 - downstream invalidation/recalculation;
+- on-demand AI-only vs Deterministic Skill comparison for EV / EBITDA;
 - local execution;
 - Fly.io deployment.
 
@@ -258,6 +263,27 @@ Acceptance gate:
 - math is covered by tests;
 - no LLM is used inside skills.
 
+### BUILD-5.5 — AI-Only Baseline Comparison
+
+Objective:
+
+Add an optional direct-AI comparison for EV / EBITDA after the trusted Skill
+engine exists.
+
+Acceptance gate:
+
+- baseline runs only on explicit user request;
+- exactly one separate Claude call;
+- report text is used directly;
+- baseline is labeled `UNVERIFIED`;
+- baseline does not consume `AnalyticalInput` objects;
+- baseline cannot affect Skill state;
+- Clean can show AI-only beside `READY`;
+- Conflict can show AI-only beside `NEEDS_REVIEW`;
+- no requirement that the AI-only answer be wrong.
+
+---
+
 ### BUILD-6 — Conflict Flow
 
 Implement the hero Report C behavior.
@@ -352,6 +378,10 @@ Confirm Claude output is truly structured and source-linked.
 ### BUILD-5
 Confirm deterministic skills cannot resolve semantic ambiguity.
 
+### BUILD-5.5
+Confirm the baseline is visually separated from the trusted path and cannot
+mutate skill state.
+
 ### BUILD-6
 Confirm Report C never displays a valuation result before basis selection.
 
@@ -399,9 +429,10 @@ If time becomes constrained:
 5. Deterministic skills
 6. Report C conflict gating
 7. Conflict resolution
-8. Correction/recalculation
-9. Lenses
-10. Visual polish
+8. AI-only comparison
+9. Correction/recalculation
+10. Lenses
+11. Visual polish
 ```
 
 Never trade away trust behavior for UI polish.
@@ -419,6 +450,8 @@ Step 9 build execution is complete when:
 - Report D exposes difficult behavior without silently fabricating precision;
 - user corrections propagate correctly;
 - deterministic calculations are tested;
+- EV / EBITDA AI-only comparison can be invoked on-demand;
+- comparison remains isolated from downstream deterministic execution;
 - eval harness can be run;
 - application deploys to Fly.io.
 

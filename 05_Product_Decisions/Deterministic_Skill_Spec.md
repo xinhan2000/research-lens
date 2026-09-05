@@ -13,6 +13,7 @@ used_by:
   - prd
   - prototype
   - calculation_engine
+  - ai_only_baseline_comparison
 ---
 
 # Research Lens — Deterministic Skill Specification
@@ -767,7 +768,38 @@ They remain outside the Deterministic Skill layer.
 
 ---
 
-# 19. Future Skill Candidates
+# 19. AI-Only Baseline Boundary
+
+Research Lens may display a raw model answer beside a Deterministic Skill
+result for demo comparison. That answer is an **AI-only baseline**, and it sits
+outside this specification's authority.
+
+The AI-only baseline:
+
+- is **NOT** a Deterministic Skill;
+- does not have `READY` / `NEEDS_REVIEW` / `BLOCKED` authority;
+- cannot supply or repair missing skill inputs;
+- cannot resolve semantic ambiguity;
+- cannot override skill gating.
+
+A raw model answer may be shown next to a skill result for comparison. Trusted
+results continue to come only from validated `AnalyticalInput` objects plus
+deterministic execution.
+
+> A model answer may be informative without being executable.
+
+The baseline is labeled `UNVERIFIED` wherever it appears, and it is never
+consumed by another skill.
+
+> The baseline may disagree with a Skill result or with a Skill refusal. That
+> disagreement is displayed, not automatically reconciled.
+
+See `05_Product_Decisions/AI_Only_Baseline_Comparison.md` for the full product
+definition.
+
+---
+
+# 20. Future Skill Candidates
 
 Potential future deterministic skills:
 
@@ -786,7 +818,7 @@ These are intentionally deferred until the MVP trust model is validated.
 
 ---
 
-# 20. Decision Summary
+# 21. Decision Summary
 
 | Skill | MVP | Main Semantic Risk |
 |---|---|---|
@@ -805,3 +837,7 @@ Core rule:
 And:
 
 > **A precise result is allowed only when the required semantic inputs are sufficiently resolved.**
+
+And, per section 19:
+
+> **An AI-only baseline may be displayed alongside a skill result, but it never carries skill authority.**
