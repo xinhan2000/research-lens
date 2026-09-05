@@ -64,7 +64,10 @@ Analytical Result
 
 A model output does **not** automatically become an analytical input.
 
-The trust layer determines whether the interpretation is sufficiently resolved for downstream use.
+The trust layer determines whether the INTERPRETATION is sufficiently supported
+by the evidence. It does not determine whether the input is eligible for any
+particular calculation: that is decided per operation by the consuming
+Deterministic Skill (§7, §8).
 
 ---
 
@@ -84,6 +87,19 @@ Use `AUTO` when:
 - supporting evidence is available;
 - the cost of an incorrect interpretation is acceptable under the applicable policy.
 
+`AUTO` describes the interpretation, not its eligibility for a calculation. An
+`AUTO` input is NOT automatically:
+
+- calculation-ready;
+- eligible for every Deterministic Skill;
+- precise enough for every Skill;
+- period-compatible with every Skill;
+- acceptable as a valuation denominator.
+
+Each Skill independently validates period, temporal type, basis, precision,
+evidence, conflict state, and any other operation-specific requirement before it
+executes. An interpretation the system trusts may still be refused by a Skill.
+
 Example:
 
 > “FY2025 revenue increased to $101 million from $82 million in FY2024.”
@@ -102,15 +118,21 @@ If no contradictory evidence exists, the value may be accepted automatically.
 
 ## ASK
 
-The system has plausible interpretations, but analyst input is required before consequential downstream use.
+The evidence supports more than one materially plausible reading, and analyst
+judgment is required to settle what the source actually means.
 
 Use `ASK` when:
 
 - more than one materially plausible interpretation exists;
-- a qualifier required by a skill is unresolved;
 - different interpretations would materially change the result;
 - the source itself is ambiguous;
 - a user preference determines the correct interpretation.
+
+`ASK` is about ambiguity in UNDERSTANDING THE SOURCE. An input whose meaning is
+clear but whose form is unusable by a given calculation is not an `ASK` case:
+that is consumer-specific incompatibility, and it produces `NEEDS_REVIEW` or
+`BLOCKED` on the Skill that cannot use it, while the interpretation itself
+remains `AUTO`.
 
 Example:
 
@@ -316,7 +338,7 @@ The initial policy is:
 | Evidence | Ambiguity | Material conflict | Consequence | Action |
 |---|---|---|---|---|
 | Direct | Low | No | Low | AUTO |
-| Direct | Low | No | High | AUTO only if required semantics are complete |
+| Direct | Low | No | High | AUTO if the interpretation is unambiguous; Skill eligibility decided separately |
 | Direct | Material | No | Any | ASK |
 | Direct | Any | Yes | Any | ASK |
 | Indirect | Low | No | Low | AUTO with visible uncertainty where appropriate |
@@ -783,7 +805,10 @@ This metric will be defined formally in the eval artifact.
 - material ambiguity remains;
 - multiple consequential definitions exist;
 - analyst intent determines the correct basis;
-- required qualifiers are unresolved but user-resolvable.
+- the source itself is ambiguous and an analyst can resolve it.
+
+An input being unusable by a particular Skill is not a reason to ask at the
+interpretation layer. The Skill reports that itself.
 
 ## AI must abstain when:
 

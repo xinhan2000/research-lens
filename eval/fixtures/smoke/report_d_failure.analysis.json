@@ -1,0 +1,182 @@
+{
+  "inputs": [
+    {
+      "input_id": "in_d1",
+      "metric": "Revenue",
+      "source_label": "Revenue",
+      "value": 101000,
+      "unit": "USD_thousands",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "reported",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "failure",
+        "page": null,
+        "section": "Financial Summary",
+        "text": "| Revenue | 101,000 | 29,000 |"
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.94,
+      "resolved": true,
+      "notes": "Table header states $ in thousands unless otherwise noted.",
+      "user_correction": null
+    },
+    {
+      "input_id": "in_d2",
+      "metric": "Revenue",
+      "source_label": "Revenue",
+      "value": 29000,
+      "unit": "USD_thousands",
+      "currency": "USD",
+      "period": "Q4 FY2025",
+      "temporal_type": "actual",
+      "basis": "reported",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "failure",
+        "page": null,
+        "section": "Financial Summary",
+        "text": "| Revenue | 101,000 | 29,000 |"
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.93,
+      "resolved": true,
+      "notes": "Fourth-quarter column, distinct from the full fiscal year.",
+      "user_correction": null
+    },
+    {
+      "input_id": "in_d3",
+      "metric": "Adjusted EBITDA",
+      "source_label": "Adjusted EBITDA*",
+      "value": 18600,
+      "unit": "USD_thousands",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "adjusted",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "failure",
+        "page": null,
+        "section": "Financial Summary",
+        "text": "| Adjusted EBITDA* | 18,600 | 5,400 |"
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.93,
+      "resolved": true,
+      "notes": "Footnote states the adjusted basis excludes restructuring expense and stock-based compensation.",
+      "user_correction": null
+    },
+    {
+      "input_id": "in_d4",
+      "metric": "Total Debt",
+      "source_label": "Total Debt",
+      "value": 125000,
+      "unit": "USD_thousands",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "reported",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "failure",
+        "page": null,
+        "section": "Financial Summary",
+        "text": "| Total Debt | 125,000 | — |"
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.93,
+      "resolved": true,
+      "notes": null,
+      "user_correction": null
+    },
+    {
+      "input_id": "in_d5",
+      "metric": "Cash",
+      "source_label": "Cash",
+      "value": 30000,
+      "unit": "USD_thousands",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "reported",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "failure",
+        "page": null,
+        "section": "Financial Summary",
+        "text": "| Cash | 30,000 | — |"
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.93,
+      "resolved": true,
+      "notes": null,
+      "user_correction": null
+    },
+    {
+      "input_id": "in_d6",
+      "metric": "EBITDA",
+      "source_label": "roughly $25 million of EBITDA next year",
+      "value": 25.0,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "next year",
+      "temporal_type": "target",
+      "basis": "management_defined",
+      "precision": "approximate",
+      "range": null,
+      "source": {
+        "document_id": "failure",
+        "page": null,
+        "section": "Management Commentary",
+        "text": "Management is working toward **roughly $25 million of EBITDA next year**, but described this as an **internal planning objective rather than formal guidance**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.88,
+      "resolved": false,
+      "notes": "Described as an internal planning objective rather than formal guidance.",
+      "user_correction": null
+    }
+  ],
+  "insights": [
+    {
+      "id": "ins_d1",
+      "category": "assumption",
+      "label": "Qualitative margin expectation",
+      "summary": "Management said margins should improve meaningfully as the enterprise business scales. No numeric margin is stated.",
+      "sourceText": "Management also said margins should **improve meaningfully** as the enterprise business scales."
+    },
+    {
+      "id": "ins_d2",
+      "category": "risk",
+      "label": "Customer concentration",
+      "summary": "The three largest customers represented 28% of FY2025 revenue.",
+      "sourceText": "The three largest customers represented **28% of FY2025 revenue**."
+    }
+  ]
+}

@@ -461,6 +461,24 @@ System lacks sufficient support.
 
 `never` is uncommon at the input level but may apply to prohibited derived interpretations.
 
+### Scope
+
+`trust_state` is INPUT-GLOBAL and describes INTERPRETATION TRUST. It answers:
+
+> Is this structured interpretation sufficiently supported by the source
+> evidence, with no material unresolved ambiguity about what the source means?
+
+It does not answer:
+
+> Can every downstream calculation safely use this input?
+
+That second question is consumer-specific and cannot be settled here, because an
+`AnalyticalInput` exists before any Skill has been selected. A period expressed
+as a relative phrase, an approximate value, or a forward-looking type may be a
+perfectly trustworthy reading of the source and still be unusable by a
+particular calculation. Each Skill validates its own contract — see SI-15 and
+`Deterministic_Skill_Spec.md`.
+
 ---
 
 ## SI-14 — `materiality`
@@ -500,17 +518,35 @@ true
 false
 ```
 
-An input is `resolved = true` only when it satisfies the semantic requirements required for its intended downstream use.
+An input is `resolved = true` when its semantics have been faithfully established
+from the source — the interpretation is settled, not merely guessed.
 
 Important:
 
-> Resolved is contextual.
+> Resolved is contextual and source-faithful.
 
 An input may be sufficiently resolved for display but not sufficiently resolved for a high-consequence Deterministic Skill.
 
 The implementation should therefore avoid using this field alone as the execution gate.
 
 The consuming skill must validate its own input contract.
+
+### Source-faithful resolution vs. Skill eligibility
+
+These two statements are both true at once, and are not a contradiction:
+
+1. An input may be faithfully resolved with `period = "next year"`, because that
+   is exactly what the source says and the schema forbids inventing a fiscal
+   year the report does not state.
+2. A period-sensitive Skill may still refuse that input, because `"next year"`
+   cannot be safely equated with a specific fiscal period.
+
+The first is a statement about interpretation; the second is a statement about
+one operation's requirements. Reading (1) as license to execute, or (2) as
+evidence that the interpretation was wrong, conflates two different layers.
+
+The same separation governs `trust_state` (SI-13): interpretation trust is
+input-global, execution readiness is consumer-specific.
 
 ---
 

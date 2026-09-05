@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-import { analysisResponseSchema } from "@/lib/analysis-schema";
+// Relative, not "@/lib/...", so this validation boundary can be imported by
+// runtimes without tsconfig path resolution (Vitest, and the BUILD-9 eval CLI).
+// `lib/analysis-json-schema.ts` already imports the schema the same way.
+import { analysisResponseSchema } from "./analysis-schema";
 import type { AnalysisResponse } from "@/types/analytical-input";
 
 /**

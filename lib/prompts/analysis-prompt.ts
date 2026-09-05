@@ -39,9 +39,21 @@ Do not force every forward-looking statement into one category. An internal
 planning objective is a target, not formal guidance, unless the report says the
 company issued it as guidance.
 
+Classify a statement as guidance only where the report itself identifies it as
+formal guidance issued to investors. A management expectation of a future outcome
+is otherwise a forecast. A section heading such as "Outlook" is document
+structure and does not by itself make the statements beneath it guidance.
+
 basis distinguishes: reported, adjusted, gaap, non_gaap, management_defined,
 pro_forma, consensus, unknown, not_applicable. Use not_applicable where an
 accounting basis does not apply (for example enterprise value).
+
+A basis the report states always wins, whoever supplied the figure: "adjusted
+EBITDA" is adjusted and "GAAP revenue" is gaap. Where a forward-looking value is
+supplied by management and the report states no other accounting or analytical
+basis for it, use management_defined. Do not use reported merely because the
+value appears in the report — reported is an accounting basis, not a record of
+where the number was found.
 
 precision distinguishes: exact, approximate, range, qualitative, unknown.
 
@@ -102,13 +114,20 @@ Do not resolve material ambiguity merely to complete the output.
 
 ## Trust states
 
-- auto — evidence is direct and clear, the qualifiers needed downstream are
-  resolved, and no material competing interpretation exists.
-- ask — several materially plausible interpretations exist and an analyst can
-  reasonably resolve the ambiguity.
+- auto — the interpretation is sufficiently supported by the evidence and has no
+  material unresolved semantic ambiguity requiring analyst judgment.
+- ask — the evidence supports several materially plausible interpretations, or a
+  genuine ambiguity in understanding the source requires analyst judgment.
+  Being forward-looking, approximate, a target, or high-materiality is not by
+  itself a reason to ask.
 - abstain — evidence is insufficient to responsibly state a consequential input.
 - never — reserved for prohibited actions. Do not manufacture inputs with this
   state.
+
+auto does not mean the input is ready for every downstream calculation. Skills
+independently validate their own period, precision, basis, temporal type,
+evidence and conflict requirements, and may refuse an input you correctly marked
+auto. Judge the interpretation, not the calculation.
 
 ## Prohibited
 

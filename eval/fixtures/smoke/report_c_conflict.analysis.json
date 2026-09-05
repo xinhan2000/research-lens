@@ -1,0 +1,121 @@
+{
+  "inputs": [
+    {
+      "input_id": "in_c1",
+      "metric": "Revenue",
+      "source_label": "FY2025 revenue",
+      "value": 101.0,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "reported",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "conflict",
+        "page": null,
+        "section": "Financial Performance",
+        "text": "FY2025 revenue was **$101.0 million**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.97,
+      "resolved": true,
+      "notes": null,
+      "user_correction": null
+    },
+    {
+      "input_id": "in_c2",
+      "metric": "Adjusted EBITDA",
+      "source_label": "adjusted EBITDA",
+      "value": 18.6,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "adjusted",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "conflict",
+        "page": null,
+        "section": "Financial Performance",
+        "text": "Northstar reported **adjusted EBITDA of $18.6 million** for FY2025."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "material_conflict",
+      "trust_state": "ask",
+      "materiality": "high",
+      "confidence": 0.95,
+      "resolved": false,
+      "notes": "Competes with the reported EBITDA definition for the same period.",
+      "user_correction": null
+    },
+    {
+      "input_id": "in_c3",
+      "metric": "Reported EBITDA",
+      "source_label": "reported EBITDA",
+      "value": 14.2,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "reported",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "conflict",
+        "page": null,
+        "section": "Financial Performance",
+        "text": "The company's reported EBITDA after restructuring and stock-based compensation was **$14.2 million**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "material_conflict",
+      "trust_state": "ask",
+      "materiality": "high",
+      "confidence": 0.95,
+      "resolved": false,
+      "notes": "Competes with the adjusted EBITDA definition for the same period.",
+      "user_correction": null
+    },
+    {
+      "input_id": "in_c4",
+      "metric": "Enterprise Value",
+      "source_label": "enterprise value",
+      "value": 650.0,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "report_date",
+      "temporal_type": "actual",
+      "basis": "not_applicable",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "conflict",
+        "page": null,
+        "section": "Financial Performance",
+        "text": "Northstar's enterprise value at the report date was **$650.0 million**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.95,
+      "resolved": true,
+      "notes": null,
+      "user_correction": null
+    }
+  ],
+  "insights": [
+    {
+      "id": "ins_c1",
+      "category": "assumption",
+      "label": "EBITDA basis must be specified",
+      "summary": "The report states that any EV / EBITDA analysis must specify whether it uses adjusted or reported EBITDA.",
+      "sourceText": "Any EV / EBITDA analysis should specify whether it uses **adjusted EBITDA** or **reported EBITDA**, because the two definitions produce materially different valuation multiples."
+    }
+  ]
+}

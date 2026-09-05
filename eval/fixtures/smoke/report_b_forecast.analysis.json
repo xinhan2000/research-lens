@@ -1,0 +1,148 @@
+{
+  "inputs": [
+    {
+      "input_id": "in_b1",
+      "metric": "Revenue",
+      "source_label": "revenue",
+      "value": 101.0,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "reported",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "forecast",
+        "page": null,
+        "section": "Historical Performance",
+        "text": "Northstar generated **$101.0 million of revenue in FY2025** and **$18.6 million of adjusted EBITDA**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.96,
+      "resolved": true,
+      "notes": null,
+      "user_correction": null
+    },
+    {
+      "input_id": "in_b2",
+      "metric": "Adjusted EBITDA",
+      "source_label": "adjusted EBITDA",
+      "value": 18.6,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "FY2025",
+      "temporal_type": "actual",
+      "basis": "adjusted",
+      "precision": "exact",
+      "range": null,
+      "source": {
+        "document_id": "forecast",
+        "page": null,
+        "section": "Historical Performance",
+        "text": "Northstar generated **$101.0 million of revenue in FY2025** and **$18.6 million of adjusted EBITDA**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.96,
+      "resolved": true,
+      "notes": null,
+      "user_correction": null
+    },
+    {
+      "input_id": "in_b3",
+      "metric": "Revenue",
+      "source_label": "FY2026 revenue",
+      "value": 128.0,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "FY2026",
+      "temporal_type": "forecast",
+      "basis": "management_defined",
+      "precision": "approximate",
+      "range": null,
+      "source": {
+        "document_id": "forecast",
+        "page": null,
+        "section": "Outlook",
+        "text": "Management expects FY2026 revenue to be **approximately $128 million**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.94,
+      "resolved": true,
+      "notes": "Stated as an approximation by management.",
+      "user_correction": null
+    },
+    {
+      "input_id": "in_b4",
+      "metric": "Adjusted EBITDA",
+      "source_label": "FY2026 adjusted EBITDA",
+      "value": null,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "FY2026",
+      "temporal_type": "forecast",
+      "basis": "adjusted",
+      "precision": "range",
+      "range": { "min": 24.0, "max": 26.0 },
+      "source": {
+        "document_id": "forecast",
+        "page": null,
+        "section": "Outlook",
+        "text": "FY2026 adjusted EBITDA is expected to be **between $24 million and $26 million**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "high",
+      "confidence": 0.94,
+      "resolved": true,
+      "notes": "Range preserved; no midpoint is implied by the report.",
+      "user_correction": null
+    },
+    {
+      "input_id": "in_b5",
+      "metric": "Revenue",
+      "source_label": "longer-term revenue objective",
+      "value": 150.0,
+      "unit": "USD_millions",
+      "currency": "USD",
+      "period": "within two years",
+      "temporal_type": "target",
+      "basis": "management_defined",
+      "precision": "approximate",
+      "range": null,
+      "source": {
+        "document_id": "forecast",
+        "page": null,
+        "section": "Outlook",
+        "text": "Management's longer-term objective is to reach **approximately $150 million of annual revenue within two years**."
+      },
+      "evidence_type": "direct",
+      "conflict_state": "none",
+      "trust_state": "auto",
+      "materiality": "medium",
+      "confidence": 0.92,
+      "resolved": true,
+      "notes": "Internal target rather than reported historical performance.",
+      "user_correction": null
+    }
+  ],
+  "insights": [
+    {
+      "id": "ins_b1",
+      "category": "assumption",
+      "label": "Outlook depends on enterprise expansion",
+      "summary": "Achieving the outlook depends partly on enterprise-customer expansion and the new analytics module rollout.",
+      "sourceText": "Management noted that achieving the outlook depends partly on enterprise-customer expansion and successful rollout of the new analytics module."
+    }
+  ]
+}
