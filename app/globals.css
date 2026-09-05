@@ -1077,3 +1077,133 @@ button:disabled {
   font-size: 11px;
   line-height: 1.5;
 }
+
+/* ------------------------------------------------------------------ *
+ * BUILD-7 — analyst correction
+ * ------------------------------------------------------------------ */
+
+.interp-corrected {
+  align-self: flex-start;
+  margin-top: 3px;
+  padding: 1px 7px;
+  border: 1px solid #b3a1cf;
+  border-radius: 10px;
+  background: #f4f0fa;
+  color: #5b4a86;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.interp-original {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px dashed #b3a1cf;
+  border-radius: 5px;
+  background: #faf8fd;
+}
+
+.interp-original-label {
+  margin: 0 0 6px;
+  color: #5b4a86;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.interp-original-note {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.interp-correct-actions {
+  display: flex;
+  gap: 7px;
+  margin-top: 11px;
+}
+
+.interp-correct-actions button {
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.interp-correct-actions button:hover {
+  border-color: #b9c0ca;
+}
+
+.interp-correct {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+/* Correction dialog */
+
+.correction-dialog {
+  max-width: 460px;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+.correction-readonly {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0 0 8px;
+}
+
+.correction-readonly > div {
+  display: contents;
+}
+
+.correction-readonly dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.correction-readonly dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.correction-hint {
+  margin: 0 0 14px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.correction-original {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.correction-dialog .dialog-label {
+  margin-top: 10px;
+}
+
+.correction-dialog .evidence-label {
+  margin-top: 14px;
+}
+
+.correction-error {
+  margin: 10px 0 0;
+  padding: 6px 9px;
+  border: 1px solid #d8b6b6;
+  border-radius: 4px;
+  background: #fbf1f1;
+  color: #8c3b3b;
+  font-size: 11px;
+}

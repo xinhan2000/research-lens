@@ -7,6 +7,7 @@ import AiBenchmarkComparison, {
 } from "@/components/AiBenchmarkComparison";
 import ApiKeyDialog from "@/components/ApiKeyDialog";
 import ConflictResolutionPanel from "@/components/ConflictResolutionPanel";
+import CorrectionDialog from "@/components/CorrectionDialog";
 import InterpretationList from "@/components/InterpretationList";
 import ReportViewer from "@/components/ReportViewer";
 import SkillPanel from "@/components/SkillPanel";
@@ -15,6 +16,15 @@ import {
   type AiBenchmarkResponse,
 } from "@/lib/ai-benchmark-schema";
 import { clearApiKey, readApiKey, saveApiKey } from "@/lib/api-key";
+import {
+  applyCorrections,
+  withCorrection,
+  withoutCorrection,
+} from "@/lib/corrections/apply-corrections";
+import type {
+  AnalystCorrection,
+  CorrectionsById,
+} from "@/lib/corrections/schema";
 import { runSkills } from "@/lib/skills/engine";
 import {
   findResolvableBasisConflict,
@@ -64,15 +74,36 @@ export default function ResearchLensShell({
   const [analystResolution, setAnalystResolution] =
     useState<AnalystInputResolution | null>(null);
 
+  /**
+   * Analyst corrections, keyed by input id.
+   *
+   * An overlay on the immutable model interpretation — `analysis` is never
+   * rewritten, so the original is always available for comparison and reset.
+   */
+  const [corrections, setCorrections] = useState<CorrectionsById>({});
+  /** Input id whose correction dialog is open, or null. */
+  const [correctingInputId, setCorrectingInputId] = useState<string | null>(null);
+
   const selected = reports.find((r) => r.id === selectedId) ?? reports[0];
 
   /**
    * Deterministic skill results. Pure function of the validated inputs, so it
    * recomputes only when the analysis changes — no model call is involved.
    */
+  /**
+   * The effective session inputs: model interpretation plus analyst overlay.
+   *
+   * Everything downstream derives from this, which is what makes a stale result
+   * structurally impossible — skill results have no independent lifetime.
+   */
+  const effectiveInputs = useMemo(
+    () => (analysis ? applyCorrections(analysis.inputs, corrections) : null),
+    [analysis, corrections],
+  );
+
   const skills = useMemo(
-    () => (analysis ? runSkills(analysis.inputs, analystResolution) : null),
-    [analysis, analystResolution],
+    () => (effectiveInputs ? runSkills(effectiveInputs, analystResolution) : null),
+    [effectiveInputs, analystResolution],
   );
 
   /**
@@ -82,8 +113,8 @@ export default function ResearchLensShell({
    * report-specific branching. Report D's period ambiguity produces none.
    */
   const basisConflict = useMemo(
-    () => (analysis ? findResolvableBasisConflict(analysis.inputs) : null),
-    [analysis],
+    () => (effectiveInputs ? findResolvableBasisConflict(effectiveInputs) : null),
+    [effectiveInputs],
   );
 
   /** Evidence of the active interpretation, handed to the report panel. */
@@ -122,6 +153,8 @@ export default function ResearchLensShell({
     setEvidenceMatched(null);
     clearBenchmark();
     setAnalystResolution(null);
+    setCorrections({});
+    setCorrectingInputId(null);
   }
 
   const handleAnalyze = useCallback(async () => {
@@ -141,9 +174,11 @@ export default function ResearchLensShell({
     setEvidenceMatched(null);
     // A stale benchmark must not be shown beside a new analysis run.
     clearBenchmark();
-    // Input ids change between runs, so a previous selection must not carry
-    // silently into new model output.
+    // Input ids change between runs, so a previous selection or correction must
+    // not carry silently into new model output.
     setAnalystResolution(null);
+    setCorrections({});
+    setCorrectingInputId(null);
 
     try {
       const response = await fetch("/api/analyze", {
@@ -225,6 +260,29 @@ export default function ResearchLensShell({
       setBenchmarkError("AI-only benchmark failed. Retry.");
     }
   }, [benchmarkStatus, selected]);
+
+  /**
+   * Saves a correction.
+   *
+   * Also clears any analyst resolution: a correction can change the period,
+   * basis, or value that made a resolution valid, and a stale human decision is
+   * as dangerous as a stale model result. Rather than attempt dependency
+   * analysis, BUILD-7 fails safe and asks the analyst to resolve again.
+   *
+   * The AI-only benchmark is deliberately NOT cleared — it answered the
+   * original report, which is exactly what makes the comparison meaningful.
+   */
+  function handleSaveCorrection(correction: AnalystCorrection) {
+    setCorrections((current) => withCorrection(current, correction));
+    setAnalystResolution(null);
+    setCorrectingInputId(null);
+  }
+
+  function handleResetCorrection(inputId: string) {
+    setCorrections((current) => withoutCorrection(current, inputId));
+    setAnalystResolution(null);
+    setCorrectingInputId(null);
+  }
 
   const analyzing = status === "analyzing";
   const benchmarking = benchmarkStatus === "running";
@@ -318,6 +376,9 @@ export default function ResearchLensShell({
             selectedInputId={selectedInputId}
             onSelectInput={setSelectedInputId}
             evidenceMatched={evidenceMatched}
+            effectiveInputs={effectiveInputs}
+            onCorrect={setCorrectingInputId}
+            onResetCorrection={handleResetCorrection}
           />
 
           {skills ? (
@@ -347,6 +408,28 @@ export default function ResearchLensShell({
           />
         </section>
       </main>
+
+      {correctingInputId && analysis && effectiveInputs
+        ? (() => {
+            const effective = effectiveInputs.find(
+              (i) => i.input_id === correctingInputId,
+            );
+            const original = analysis.inputs.find(
+              (i) => i.input_id === correctingInputId,
+            );
+            if (!effective || !original) return null;
+            return (
+              <CorrectionDialog
+                input={effective}
+                original={original}
+                existing={corrections[correctingInputId] ?? null}
+                onSave={handleSaveCorrection}
+                onReset={() => handleResetCorrection(correctingInputId)}
+                onClose={() => setCorrectingInputId(null)}
+              />
+            );
+          })()
+        : null}
 
       {dialogOpen ? (
         <ApiKeyDialog

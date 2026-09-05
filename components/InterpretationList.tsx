@@ -1,5 +1,7 @@
 "use client";
 
+import { changedFields } from "@/lib/corrections/apply-corrections";
+import { metricFamily } from "@/lib/skills/metric-family";
 import type { AnalysisResponse, AnalyticalInput } from "@/types/analytical-input";
 
 /**
@@ -75,16 +77,29 @@ const TRUST_LABEL: Record<string, string> = {
 
 function InterpretationCard({
   input,
+  original,
   selected,
   onSelect,
   evidenceMatched,
+  onCorrect,
+  onResetCorrection,
 }: {
+  /** Effective input: the model interpretation plus any analyst correction. */
   input: AnalyticalInput;
+  /** The untouched model interpretation, for comparison. */
+  original: AnalyticalInput;
   selected: boolean;
   onSelect: () => void;
   /** true = source block highlighted, false = not located, null = inactive. */
   evidenceMatched: boolean | null;
+  onCorrect: (inputId: string) => void;
+  onResetCorrection: (inputId: string) => void;
 }) {
+  // What the analyst changed, if anything. Display only.
+  const corrected = changedFields(original, input);
+  const isCorrected = corrected.length > 0;
+  // Only inputs a Deterministic Skill can consume are correctable.
+  const correctable = metricFamily(input.metric) !== null;
   const qualifiers = [titleCase(input.temporal_type)];
   if (input.basis !== "not_applicable") {
     qualifiers.push(titleCase(input.basis));
@@ -110,6 +125,10 @@ function InterpretationCard({
           </span>
           <span className="interp-value">{formatValue(input)}</span>
         </span>
+
+        {isCorrected ? (
+          <span className="interp-corrected">Corrected by analyst</span>
+        ) : null}
 
         <span className="interp-meta">
           <span className="interp-period">{input.period ?? "Period unknown"}</span>
@@ -155,6 +174,68 @@ function InterpretationCard({
           {evidenceMatched === false ? (
             <p className="evidence-unmatched">Source location not matched</p>
           ) : null}
+
+          {isCorrected ? (
+            <div className="interp-original">
+              <p className="interp-original-label">Original AI interpretation</p>
+              <dl className="interp-fields">
+                {corrected.includes("value") ? (
+                  <div>
+                    <dt>Value</dt>
+                    <dd>{formatValue(original)}</dd>
+                  </div>
+                ) : null}
+                {corrected.includes("period") ? (
+                  <div>
+                    <dt>Period</dt>
+                    <dd>{original.period ?? "Unknown"}</dd>
+                  </div>
+                ) : null}
+                {corrected.includes("temporal_type") ? (
+                  <div>
+                    <dt>Temporal Type</dt>
+                    <dd>{titleCase(original.temporal_type)}</dd>
+                  </div>
+                ) : null}
+                {corrected.includes("basis") ? (
+                  <div>
+                    <dt>Basis</dt>
+                    <dd>{titleCase(original.basis)}</dd>
+                  </div>
+                ) : null}
+                {corrected.includes("precision") ? (
+                  <div>
+                    <dt>Precision</dt>
+                    <dd>{titleCase(original.precision)}</dd>
+                  </div>
+                ) : null}
+              </dl>
+              <p className="interp-original-note">
+                The evidence above is the original report text. It does not
+                state the corrected value.
+              </p>
+            </div>
+          ) : null}
+
+          {correctable ? (
+            <div className="interp-correct-actions">
+              <button
+                type="button"
+                className="interp-correct"
+                onClick={() => onCorrect(input.input_id)}
+              >
+                Correct interpretation
+              </button>
+              {isCorrected ? (
+                <button
+                  type="button"
+                  onClick={() => onResetCorrection(input.input_id)}
+                >
+                  Reset to AI interpretation
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </li>
@@ -163,14 +244,21 @@ function InterpretationCard({
 
 export default function InterpretationList({
   analysis,
+  effectiveInputs,
   status,
   errorMessage,
   onRetry,
   selectedInputId,
   onSelectInput,
   evidenceMatched,
+  onCorrect,
+  onResetCorrection,
 }: {
   analysis: AnalysisResponse | null;
+  /** Effective inputs consumed by the skill engine. */
+  effectiveInputs: AnalyticalInput[] | null;
+  onCorrect: (inputId: string) => void;
+  onResetCorrection: (inputId: string) => void;
   status: AnalysisStatus;
   errorMessage: string | null;
   onRetry: () => void;
@@ -210,10 +298,15 @@ export default function InterpretationList({
       </p>
 
       <ul className="interp-list">
-        {analysis.inputs.map((input) => (
+        {(effectiveInputs ?? analysis.inputs).map((input) => (
           <InterpretationCard
             key={input.input_id}
             input={input}
+            original={
+              analysis.inputs.find((o) => o.input_id === input.input_id) ?? input
+            }
+            onCorrect={onCorrect}
+            onResetCorrection={onResetCorrection}
             selected={selectedInputId === input.input_id}
             evidenceMatched={
               selectedInputId === input.input_id ? evidenceMatched : null
@@ -229,8 +322,7 @@ export default function InterpretationList({
 
       <p className="panel-footnote">
         {analysis.inputs.length} analytical inputs ·{" "}
-        {analysis.insights.length} narrative insights. Deterministic skills
-        arrive in BUILD-5.
+        {analysis.insights.length} narrative insights.
       </p>
     </>
   );
