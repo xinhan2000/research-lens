@@ -597,3 +597,178 @@ button:disabled {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }
+
+/* ------------------------------------------------------------------ *
+ * BUILD-5 — Deterministic Skills section
+ * ------------------------------------------------------------------ */
+
+.skills {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 2px solid var(--border);
+}
+
+.skills-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.skills-count {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill {
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.skill-ready {
+  border-left: 3px solid #4d8b52;
+}
+
+.skill-needs_review {
+  border-left: 3px solid #c8971f;
+}
+
+.skill-blocked {
+  border-left: 3px solid #9aa2ad;
+}
+
+.skill-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.skill-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.skill-status {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.skill-status-ready {
+  border-color: #b9d3b2;
+  background: #f1f8ef;
+  color: #2f6b34;
+}
+
+.skill-status-needs_review {
+  border-color: #e0c68a;
+  background: #fdf7e8;
+  color: #8a6116;
+}
+
+.skill-status-blocked {
+  border-color: #ccd2da;
+  background: var(--bg);
+  color: #5f6772;
+}
+
+.skill-value {
+  margin: 8px 0 2px;
+  font-size: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.skill-reason {
+  margin: 7px 0 2px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.skill-section-label {
+  margin: 10px 0 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.skill-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-input {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 3px 7px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--bg);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.skill-input:hover {
+  border-color: var(--border);
+}
+
+.skill-input-selected {
+  border-color: var(--accent);
+  background: #eef3fa;
+}
+
+.skill-input-label {
+  color: var(--muted);
+}
+
+.skill-input-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.skill-formula {
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}

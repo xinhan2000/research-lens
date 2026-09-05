@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import ApiKeyDialog from "@/components/ApiKeyDialog";
 import InterpretationList from "@/components/InterpretationList";
 import ReportViewer from "@/components/ReportViewer";
+import SkillPanel from "@/components/SkillPanel";
 import { clearApiKey, readApiKey, saveApiKey } from "@/lib/api-key";
+import { runSkills } from "@/lib/skills/engine";
 import type { AnalysisResponse } from "@/types/analytical-input";
 import type { SampleReport } from "@/types/report";
 
@@ -30,6 +32,15 @@ export default function ResearchLensShell({
   const [evidenceMatched, setEvidenceMatched] = useState<boolean | null>(null);
 
   const selected = reports.find((r) => r.id === selectedId) ?? reports[0];
+
+  /**
+   * Deterministic skill results. Pure function of the validated inputs, so it
+   * recomputes only when the analysis changes — no model call is involved.
+   */
+  const skills = useMemo(
+    () => (analysis ? runSkills(analysis.inputs) : null),
+    [analysis],
+  );
 
   /** Evidence of the active interpretation, handed to the report panel. */
   const activeEvidence =
@@ -190,6 +201,12 @@ export default function ResearchLensShell({
             selectedInputId={selectedInputId}
             onSelectInput={setSelectedInputId}
             evidenceMatched={evidenceMatched}
+          />
+
+          <SkillPanel
+            skills={skills}
+            onSelectInput={setSelectedInputId}
+            selectedInputId={selectedInputId}
           />
         </section>
       </main>
