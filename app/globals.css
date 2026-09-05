@@ -160,7 +160,7 @@ button:disabled {
 
 .panels {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 320px;
+  grid-template-columns: 220px minmax(0, 1fr) 400px;
   gap: 1px;
   flex: 1;
   min-height: 0;
@@ -771,4 +771,178 @@ button:disabled {
   color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ *
+ * BUILD-5.5 — AI-only benchmark comparison
+ * ------------------------------------------------------------------ */
+
+.cmp {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 2px solid var(--border);
+}
+
+.cmp-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cmp-run {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.cmp-run:hover:not(:disabled) {
+  border-color: #b9c0ca;
+}
+
+.cmp-run:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cmp-note {
+  margin: 0 0 11px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.cmp-error {
+  margin: 0 0 11px;
+  padding: 7px 9px;
+  border: 1px solid #d8b6b6;
+  border-radius: 5px;
+  background: #fbf1f1;
+  color: #8c3b3b;
+  font-size: 12px;
+}
+
+.cmp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cmp-task {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* Two equal cells, side by side, no horizontal scrolling. */
+.cmp-cells {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cmp-cell {
+  padding: 8px 9px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  min-width: 0;
+}
+
+/* The AI side is deliberately neutral-grey: never styled as success. */
+.cmp-cell-ai {
+  background: var(--bg);
+}
+
+.cmp-cell-skill {
+  background: var(--surface);
+}
+
+.cmp-cell-head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cmp-unverified {
+  align-self: flex-start;
+  padding: 1px 6px;
+  border: 1px solid #ccd2da;
+  border-radius: 9px;
+  background: var(--surface);
+  color: #5f6772;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+.cmp-status {
+  align-self: flex-start;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+.cmp-status-ready {
+  border-color: #b9d3b2;
+  background: #f1f8ef;
+  color: #2f6b34;
+}
+
+.cmp-status-needs_review {
+  border-color: #e0c68a;
+  background: #fdf7e8;
+  color: #8a6116;
+}
+
+.cmp-status-blocked {
+  border-color: #ccd2da;
+  background: var(--bg);
+  color: #5f6772;
+}
+
+.cmp-answer {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.cmp-answer-none {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.cmp-explanation {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }

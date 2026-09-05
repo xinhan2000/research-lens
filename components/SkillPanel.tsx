@@ -1,5 +1,6 @@
 "use client";
 
+import { formatSkillResult, SKILL_STATUS_LABEL } from "@/lib/skill-format";
 import type { SkillInputReference, SkillResult } from "@/lib/skills/types";
 
 /**
@@ -10,20 +11,8 @@ import type { SkillInputReference, SkillResult } from "@/lib/skills/types";
  * non-READY `SkillResult` cannot carry one.
  */
 
-const STATUS_LABEL: Record<SkillResult["status"], string> = {
-  READY: "READY",
-  NEEDS_REVIEW: "NEEDS REVIEW",
-  BLOCKED: "BLOCKED",
-};
-
-/** Display formatting. Internal values stay unrounded. */
-function formatResult(result: SkillResult): string {
-  if (result.value === undefined || result.unit === undefined) return "";
-  const { value, unit } = result;
-  if (unit === "percent") return `${(value * 100).toFixed(2)}%`;
-  if (unit === "multiple") return `${value.toFixed(2)}x`;
-  return `$${value.toFixed(2).replace(/\.00$/, "")}M`;
-}
+/* Formatting lives in `lib/skill-format.ts` so the benchmark comparison renders
+   identical values without duplicating the rules. */
 
 function formatInput(reference: SkillInputReference): string {
   if (reference.value === null) return "—";
@@ -47,12 +36,12 @@ function SkillCard({
       <div className="skill-head">
         <span className="skill-name">{isReady ? result.label : result.name}</span>
         <span className={`skill-status skill-status-${result.status.toLowerCase()}`}>
-          {STATUS_LABEL[result.status]}
+          {SKILL_STATUS_LABEL[result.status]}
         </span>
       </div>
 
       {isReady ? (
-        <p className="skill-value">{formatResult(result)}</p>
+        <p className="skill-value">{formatSkillResult(result)}</p>
       ) : (
         <p className="skill-reason">{result.reason}</p>
       )}

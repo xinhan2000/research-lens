@@ -21,6 +21,15 @@ export const ANALYSIS_MAX_TOKENS = 8000;
 export const ANALYSIS_EFFORT = "medium" as const;
 
 /**
+ * Output ceiling for one AI-only benchmark call. Six short answers with brief
+ * explanations need far less room than a full interpretation.
+ *
+ * The benchmark deliberately reuses ANALYSIS_MODEL: the comparison is between
+ * two architectures over the same model, not between two models.
+ */
+export const BENCHMARK_MAX_TOKENS = 2000;
+
+/**
  * Defensive ceiling on submitted report text. The built-in samples are ~1 KB;
  * this only exists so an unexpected payload cannot drive up token spend.
  */

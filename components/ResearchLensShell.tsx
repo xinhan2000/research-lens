@@ -2,10 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import AiBenchmarkComparison, {
+  type BenchmarkStatus,
+} from "@/components/AiBenchmarkComparison";
 import ApiKeyDialog from "@/components/ApiKeyDialog";
 import InterpretationList from "@/components/InterpretationList";
 import ReportViewer from "@/components/ReportViewer";
 import SkillPanel from "@/components/SkillPanel";
+import {
+  buildBenchmarkRequestBody,
+  type AiBenchmarkResponse,
+} from "@/lib/ai-benchmark-schema";
 import { clearApiKey, readApiKey, saveApiKey } from "@/lib/api-key";
 import { runSkills } from "@/lib/skills/engine";
 import type { AnalysisResponse } from "@/types/analytical-input";
@@ -30,6 +37,18 @@ export default function ResearchLensShell({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedInputId, setSelectedInputId] = useState<string | null>(null);
   const [evidenceMatched, setEvidenceMatched] = useState<boolean | null>(null);
+
+  /**
+   * AI-only benchmark state.
+   *
+   * Deliberately separate from `analysis` / `status` / `errorMessage`. A
+   * benchmark failure never clears the analysis, never changes the analysis
+   * status, and never touches deterministic skill results — and the skills
+   * never read any of this.
+   */
+  const [benchmark, setBenchmark] = useState<AiBenchmarkResponse | null>(null);
+  const [benchmarkStatus, setBenchmarkStatus] = useState<BenchmarkStatus>("idle");
+  const [benchmarkError, setBenchmarkError] = useState<string | null>(null);
 
   const selected = reports.find((r) => r.id === selectedId) ?? reports[0];
 
@@ -57,6 +76,17 @@ export default function ResearchLensShell({
     setKeyConfigured(readApiKey() !== null);
   }, []);
 
+  /**
+   * Clears the benchmark without re-running it. Used on report switch and when
+   * a fresh analysis starts, so an old benchmark is never paired with new
+   * results. Re-running is always an explicit user choice.
+   */
+  function clearBenchmark() {
+    setBenchmark(null);
+    setBenchmarkStatus("idle");
+    setBenchmarkError(null);
+  }
+
   /** Switching reports must never leave another report's analysis on screen. */
   function handleSelectReport(id: string) {
     setSelectedId(id);
@@ -65,6 +95,7 @@ export default function ResearchLensShell({
     setErrorMessage(null);
     setSelectedInputId(null);
     setEvidenceMatched(null);
+    clearBenchmark();
   }
 
   const handleAnalyze = useCallback(async () => {
@@ -82,6 +113,8 @@ export default function ResearchLensShell({
     setAnalysis(null);
     setSelectedInputId(null);
     setEvidenceMatched(null);
+    // A stale benchmark must not be shown beside a new analysis run.
+    clearBenchmark();
 
     try {
       const response = await fetch("/api/analyze", {
@@ -110,7 +143,62 @@ export default function ResearchLensShell({
     }
   }, [selected]);
 
+  /**
+   * Runs the AI-only benchmark: one click, one fetch, one Anthropic call.
+   *
+   * The request carries the API key and the report text only — no analysis, no
+   * interpretations, no skill results, no trust or conflict state, no Ground
+   * Truth. The body is built by `buildBenchmarkRequestBody` so that boundary is
+   * testable in one place.
+   */
+  const handleRunBenchmark = useCallback(async () => {
+    // Guard against a duplicate click racing the disabled attribute.
+    if (benchmarkStatus === "running") return;
+
+    const apiKey = readApiKey();
+    if (!apiKey) {
+      setKeyConfigured(false);
+      setBenchmarkStatus("error");
+      setBenchmarkError(
+        "Anthropic API key required to run the AI-only benchmark.",
+      );
+      setDialogOpen(true);
+      return;
+    }
+
+    setBenchmarkStatus("running");
+    setBenchmarkError(null);
+    setBenchmark(null);
+
+    try {
+      const response = await fetch("/api/ai-benchmark", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          buildBenchmarkRequestBody(apiKey, selected.content),
+        ),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setBenchmarkStatus("error");
+        setBenchmarkError(
+          payload?.error?.message ?? "AI-only benchmark failed. Retry.",
+        );
+        return;
+      }
+
+      setBenchmark(payload.benchmark as AiBenchmarkResponse);
+      setBenchmarkStatus("success");
+    } catch {
+      setBenchmarkStatus("error");
+      setBenchmarkError("AI-only benchmark failed. Retry.");
+    }
+  }, [benchmarkStatus, selected]);
+
   const analyzing = status === "analyzing";
+  const benchmarking = benchmarkStatus === "running";
 
   return (
     <div className="shell">
@@ -129,7 +217,7 @@ export default function ResearchLensShell({
             <select
               value={selected.id}
               onChange={(event) => handleSelectReport(event.target.value)}
-              disabled={analyzing}
+              disabled={analyzing || benchmarking}
             >
               {reports.map((report) => (
                 <option key={report.id} value={report.id}>
@@ -150,7 +238,7 @@ export default function ResearchLensShell({
             type="button"
             className="primary"
             onClick={handleAnalyze}
-            disabled={analyzing}
+            disabled={analyzing || benchmarking}
           >
             {analyzing ? "Analyzing…" : "Analyze Report"}
           </button>
@@ -202,6 +290,16 @@ export default function ResearchLensShell({
             onSelectInput={setSelectedInputId}
             evidenceMatched={evidenceMatched}
           />
+
+          {skills ? (
+            <AiBenchmarkComparison
+              benchmark={benchmark}
+              benchmarkStatus={benchmarkStatus}
+              benchmarkError={benchmarkError}
+              skills={skills}
+              onRunBenchmark={handleRunBenchmark}
+            />
+          ) : null}
 
           <SkillPanel
             skills={skills}
