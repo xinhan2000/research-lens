@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import type { AnalysisResponse, AnalyticalInput } from "@/types/analytical-input";
 
 /**
@@ -79,10 +77,13 @@ function InterpretationCard({
   input,
   selected,
   onSelect,
+  evidenceMatched,
 }: {
   input: AnalyticalInput;
   selected: boolean;
   onSelect: () => void;
+  /** true = source block highlighted, false = not located, null = inactive. */
+  evidenceMatched: boolean | null;
 }) {
   const qualifiers = [titleCase(input.temporal_type)];
   if (input.basis !== "not_applicable") {
@@ -120,6 +121,42 @@ function InterpretationCard({
           <span className="trust-word">{TRUST_LABEL[input.trust_state]}</span>
         </span>
       </button>
+
+      {selected ? (
+        <div className="interp-detail">
+          <dl className="interp-fields">
+            <div>
+              <dt>Period</dt>
+              <dd>{input.period ?? "Unknown"}</dd>
+            </div>
+            <div>
+              <dt>Temporal Type</dt>
+              <dd>{titleCase(input.temporal_type)}</dd>
+            </div>
+            <div>
+              <dt>Basis</dt>
+              <dd>{titleCase(input.basis)}</dd>
+            </div>
+            <div>
+              <dt>Precision</dt>
+              <dd>{titleCase(input.precision)}</dd>
+            </div>
+            <div>
+              <dt>Trust State</dt>
+              <dd>{TRUST_LABEL[input.trust_state]}</dd>
+            </div>
+          </dl>
+
+          {/* Source evidence is deliberately the most prominent element here —
+              it outranks any model-generated label. */}
+          <p className="evidence-label">Evidence</p>
+          <blockquote className="evidence-text">{input.source.text}</blockquote>
+
+          {evidenceMatched === false ? (
+            <p className="evidence-unmatched">Source location not matched</p>
+          ) : null}
+        </div>
+      ) : null}
     </li>
   );
 }
@@ -129,13 +166,18 @@ export default function InterpretationList({
   status,
   errorMessage,
   onRetry,
+  selectedInputId,
+  onSelectInput,
+  evidenceMatched,
 }: {
   analysis: AnalysisResponse | null;
   status: AnalysisStatus;
   errorMessage: string | null;
   onRetry: () => void;
+  selectedInputId: string | null;
+  onSelectInput: (inputId: string | null) => void;
+  evidenceMatched: boolean | null;
 }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   if (status === "analyzing") {
     return <p className="placeholder">Analyzing report…</p>;
@@ -172,10 +214,13 @@ export default function InterpretationList({
           <InterpretationCard
             key={input.input_id}
             input={input}
-            selected={selectedId === input.input_id}
+            selected={selectedInputId === input.input_id}
+            evidenceMatched={
+              selectedInputId === input.input_id ? evidenceMatched : null
+            }
             onSelect={() =>
-              setSelectedId((current) =>
-                current === input.input_id ? null : input.input_id,
+              onSelectInput(
+                selectedInputId === input.input_id ? null : input.input_id,
               )
             }
           />

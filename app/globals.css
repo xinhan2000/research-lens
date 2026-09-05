@@ -488,3 +488,112 @@ button:disabled {
 .dialog-spacer {
   flex: 1;
 }
+
+/* ------------------------------------------------------------------ *
+ * BUILD-4 — evidence linking and source highlighting
+ * ------------------------------------------------------------------ */
+
+/* Matched source block in the original report. Subtle enough to keep the
+   report readable; text contrast is unchanged. */
+.report .evidence-active {
+  background: #fff6d9;
+  box-shadow: inset 3px 0 0 #d9a520;
+  border-radius: 3px;
+}
+
+.report p.evidence-active,
+.report li.evidence-active,
+.report blockquote.evidence-active {
+  padding: 4px 10px;
+  margin-left: -10px;
+  margin-right: -10px;
+}
+
+/* Table rows highlight across every cell without disturbing layout. */
+.report tr.evidence-active {
+  box-shadow: none;
+}
+
+.report tr.evidence-active td {
+  background: #fff6d9;
+}
+
+.report tr.evidence-active td:first-child {
+  box-shadow: inset 3px 0 0 #d9a520;
+}
+
+/* Expanded detail area on the selected interpretation card. */
+
+.interp-detail {
+  margin: -2px 0 2px;
+  padding: 10px 11px 11px;
+  border: 1px solid var(--accent);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: var(--surface);
+}
+
+.interp-fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 12px;
+  margin: 0 0 11px;
+}
+
+.interp-fields > div {
+  display: contents;
+}
+
+.interp-fields dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.interp-fields dd {
+  margin: 0;
+  font-size: 12px;
+}
+
+.evidence-label {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* Evidence outranks any model-generated label: larger, quoted, emphasised. */
+.evidence-text {
+  margin: 0;
+  padding: 7px 11px;
+  border-left: 3px solid #d9a520;
+  background: #fff6d9;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.evidence-text::before {
+  content: "\201C";
+}
+
+.evidence-text::after {
+  content: "\201D";
+}
+
+.evidence-unmatched {
+  margin: 8px 0 0;
+  padding: 5px 9px;
+  border: 1px solid #e0c68a;
+  border-radius: 4px;
+  background: #fdf7e8;
+  color: #8a6116;
+  font-size: 11px;
+}
+
+/* The selected card joins visually with its detail area. */
+.interp-selected {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}

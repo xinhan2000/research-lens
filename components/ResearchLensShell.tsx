@@ -26,8 +26,20 @@ export default function ResearchLensShell({
   const [status, setStatus] = useState<AnalysisStatus>("idle");
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedInputId, setSelectedInputId] = useState<string | null>(null);
+  const [evidenceMatched, setEvidenceMatched] = useState<boolean | null>(null);
 
   const selected = reports.find((r) => r.id === selectedId) ?? reports[0];
+
+  /** Evidence of the active interpretation, handed to the report panel. */
+  const activeEvidence =
+    analysis?.inputs.find((input) => input.input_id === selectedInputId)?.source
+      .text ?? null;
+
+  // Stable identity keeps the report panel's match effect from re-running.
+  const handleMatchResult = useCallback((matched: boolean | null) => {
+    setEvidenceMatched(matched);
+  }, []);
 
   // sessionStorage is unavailable during server render.
   useEffect(() => {
@@ -40,6 +52,8 @@ export default function ResearchLensShell({
     setAnalysis(null);
     setStatus("idle");
     setErrorMessage(null);
+    setSelectedInputId(null);
+    setEvidenceMatched(null);
   }
 
   const handleAnalyze = useCallback(async () => {
@@ -55,6 +69,8 @@ export default function ResearchLensShell({
     setStatus("analyzing");
     setErrorMessage(null);
     setAnalysis(null);
+    setSelectedInputId(null);
+    setEvidenceMatched(null);
 
     try {
       const response = await fetch("/api/analyze", {
@@ -157,7 +173,11 @@ export default function ResearchLensShell({
             Original Report
             <span className="panel-meta">{selected.fileName}</span>
           </h2>
-          <ReportViewer report={selected} />
+          <ReportViewer
+            report={selected}
+            evidenceText={activeEvidence}
+            onMatchResult={handleMatchResult}
+          />
         </section>
 
         <section className="panel panel-analysis" aria-label="Analysis and skills">
@@ -167,6 +187,9 @@ export default function ResearchLensShell({
             status={status}
             errorMessage={errorMessage}
             onRetry={handleAnalyze}
+            selectedInputId={selectedInputId}
+            onSelectInput={setSelectedInputId}
+            evidenceMatched={evidenceMatched}
           />
         </section>
       </main>
