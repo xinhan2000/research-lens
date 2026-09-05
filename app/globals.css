@@ -138,8 +138,15 @@ button:disabled {
   padding: 3px 11px;
   border: 1px solid transparent;
   border-radius: 12px;
+  background: transparent;
   color: var(--muted);
+  font: inherit;
   font-size: 13px;
+  cursor: pointer;
+}
+
+.lens:hover {
+  border-color: var(--border);
 }
 
 .lens-active {
@@ -1206,4 +1213,132 @@ button:disabled {
   background: #fbf1f1;
   color: #8c3b3b;
   font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ *
+ * BUILD-8 — semantic navigation and narrative insights
+ * ------------------------------------------------------------------ */
+
+.nav-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nav-group-title {
+  margin: 0 0 5px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: var(--bg);
+}
+
+.nav-item-active {
+  border-color: var(--accent);
+  background: #eef3fa;
+}
+
+.nav-item-label {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.nav-item-meta {
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Narrative insight cards — deliberately unlike a trusted skill result. */
+
+.insight-list {
+  margin-top: 10px;
+}
+
+.insight {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-left: 3px solid #b3a1cf;
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.insight:hover {
+  border-color: #b9c0ca;
+  border-left-color: #b3a1cf;
+}
+
+.insight-selected {
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+.insight-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.insight-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.insight-category {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.insight-summary {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.insight-kind {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }

@@ -10,6 +10,7 @@ import ConflictResolutionPanel from "@/components/ConflictResolutionPanel";
 import CorrectionDialog from "@/components/CorrectionDialog";
 import InterpretationList from "@/components/InterpretationList";
 import ReportViewer from "@/components/ReportViewer";
+import SemanticNavigation from "@/components/SemanticNavigation";
 import SkillPanel from "@/components/SkillPanel";
 import {
   buildBenchmarkRequestBody,
@@ -25,6 +26,13 @@ import type {
   AnalystCorrection,
   CorrectionsById,
 } from "@/lib/corrections/schema";
+import {
+  buildNavigation,
+  getLensContent,
+  LENSES,
+  type LensId,
+  type NavigationTarget,
+} from "@/lib/navigation";
 import { runSkills } from "@/lib/skills/engine";
 import {
   findResolvableBasisConflict,
@@ -32,9 +40,6 @@ import {
 } from "@/lib/skills/resolution";
 import type { AnalysisResponse } from "@/types/analytical-input";
 import type { SampleReport } from "@/types/report";
-
-/** Static for BUILD-3. Lens filtering arrives in BUILD-8. */
-const LENSES = ["All", "Financials", "Risks", "Timeline", "Assumptions"];
 
 /** One Claude call is one operation — no fabricated sub-stages. */
 type AnalysisStatus = "idle" | "analyzing" | "success" | "error";
@@ -84,6 +89,11 @@ export default function ResearchLensShell({
   /** Input id whose correction dialog is open, or null. */
   const [correctingInputId, setCorrectingInputId] = useState<string | null>(null);
 
+  /** Active lens. Local presentation state — never reaches trusted execution. */
+  const [activeLens, setActiveLens] = useState<LensId>("all");
+  /** Only one evidence target is active at a time: an input OR an insight. */
+  const [selectedInsightId, setSelectedInsightId] = useState<string | null>(null);
+
   const selected = reports.find((r) => r.id === selectedId) ?? reports[0];
 
   /**
@@ -117,10 +127,69 @@ export default function ResearchLensShell({
     [effectiveInputs],
   );
 
+  /**
+   * Lens-visible content.
+   *
+   * Analytical inputs come from `effectiveInputs`, so a corrected value is
+   * never displayed as the original. Narrative insights come from the original
+   * AI output: corrections affect the current analytical inputs; narrative
+   * insights remain source-derived AI interpretations and are never rewritten.
+   *
+   * Derived AFTER effectiveInputs exist, purely for presentation. No lens value
+   * reaches runSkills, findResolvableBasisConflict, or applyCorrections.
+   */
+  const lensContent = useMemo(
+    () =>
+      getLensContent(
+        activeLens,
+        effectiveInputs ?? [],
+        analysis?.insights ?? [],
+      ),
+    [activeLens, effectiveInputs, analysis],
+  );
+
+  /** Navigation follows the current lens, so it never targets hidden content. */
+  const navigationGroups = useMemo(
+    () => (analysis ? buildNavigation(lensContent) : []),
+    [analysis, lensContent],
+  );
+
   /** Evidence of the active interpretation, handed to the report panel. */
   const activeEvidence =
-    analysis?.inputs.find((input) => input.input_id === selectedInputId)?.source
-      .text ?? null;
+    (selectedInsightId
+      ? analysis?.insights.find((i) => i.id === selectedInsightId)?.sourceText
+      : analysis?.inputs.find((i) => i.input_id === selectedInputId)?.source
+          .text) ?? null;
+
+  /** Selecting an input clears any selected insight, and vice versa. */
+  function handleSelectInput(inputId: string | null) {
+    setSelectedInputId(inputId);
+    setSelectedInsightId(null);
+  }
+
+  function handleSelectInsight(insightId: string | null) {
+    setSelectedInsightId(insightId);
+    setSelectedInputId(null);
+  }
+
+  function handleSelectNavigation(target: NavigationTarget) {
+    if (target.kind === "input") handleSelectInput(target.id);
+    else handleSelectInsight(target.id);
+  }
+
+  /**
+   * Switching lens clears the active evidence target and any open correction
+   * dialog, so a hidden item cannot leave an unrelated source block
+   * highlighted. Analysis, corrections, resolution, benchmark and skills are
+   * deliberately untouched.
+   */
+  function handleSelectLens(lens: LensId) {
+    setActiveLens(lens);
+    setSelectedInputId(null);
+    setSelectedInsightId(null);
+    setEvidenceMatched(null);
+    setCorrectingInputId(null);
+  }
 
   // Stable identity keeps the report panel's match effect from re-running.
   const handleMatchResult = useCallback((matched: boolean | null) => {
@@ -155,6 +224,10 @@ export default function ResearchLensShell({
     setAnalystResolution(null);
     setCorrections({});
     setCorrectingInputId(null);
+    setSelectedInsightId(null);
+    setActiveLens("all");
+    setSelectedInsightId(null);
+    setActiveLens("all");
   }
 
   const handleAnalyze = useCallback(async () => {
@@ -333,25 +406,28 @@ export default function ResearchLensShell({
       </header>
 
       <nav className="lens-row" aria-label="Analytical lenses">
-        {LENSES.map((lens, index) => (
-          <span
-            key={lens}
-            className={`lens${index === 0 ? " lens-active" : ""}`}
-            aria-disabled="true"
+        {LENSES.map((lens) => (
+          <button
+            key={lens.id}
+            type="button"
+            className={`lens${activeLens === lens.id ? " lens-active" : ""}`}
+            onClick={() => handleSelectLens(lens.id)}
+            aria-pressed={activeLens === lens.id}
           >
-            {lens}
-          </span>
+            {lens.label}
+          </button>
         ))}
-        <span className="lens-note">Filtering not implemented yet</span>
       </nav>
 
       <main className="panels">
         <section className="panel panel-nav" aria-label="Semantic navigation">
           <h2 className="panel-title">Semantic Navigation</h2>
-          <p className="placeholder">
-            AI-generated analytical organization of the report appears here once
-            navigation is implemented.
-          </p>
+          <SemanticNavigation
+            groups={navigationGroups}
+            selectedInputId={selectedInputId}
+            selectedInsightId={selectedInsightId}
+            onSelect={handleSelectNavigation}
+          />
         </section>
 
         <section className="panel panel-report" aria-label="Original report">
@@ -374,9 +450,13 @@ export default function ResearchLensShell({
             errorMessage={errorMessage}
             onRetry={handleAnalyze}
             selectedInputId={selectedInputId}
-            onSelectInput={setSelectedInputId}
+            onSelectInput={handleSelectInput}
             evidenceMatched={evidenceMatched}
-            effectiveInputs={effectiveInputs}
+            visibleInputs={lensContent.inputs}
+            visibleInsights={lensContent.insights}
+            activeLens={activeLens}
+            selectedInsightId={selectedInsightId}
+            onSelectInsight={handleSelectInsight}
             onCorrect={setCorrectingInputId}
             onResetCorrection={handleResetCorrection}
           />
@@ -396,14 +476,14 @@ export default function ResearchLensShell({
               conflict={basisConflict}
               resolution={analystResolution}
               onResolve={setAnalystResolution}
-              onShowEvidence={setSelectedInputId}
+              onShowEvidence={handleSelectInput}
               selectedInputId={selectedInputId}
             />
           ) : null}
 
           <SkillPanel
             skills={skills}
-            onSelectInput={setSelectedInputId}
+            onSelectInput={handleSelectInput}
             selectedInputId={selectedInputId}
           />
         </section>

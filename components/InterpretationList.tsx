@@ -2,7 +2,10 @@
 
 import { changedFields } from "@/lib/corrections/apply-corrections";
 import { metricFamily } from "@/lib/skills/metric-family";
+import { emptyLensMessage, type LensId } from "@/lib/navigation";
 import type { AnalysisResponse, AnalyticalInput } from "@/types/analytical-input";
+
+type ReportInsight = AnalysisResponse["insights"][number];
 
 /**
  * Right panel: validated analytical inputs from live Claude inference.
@@ -242,21 +245,76 @@ function InterpretationCard({
   );
 }
 
+/**
+ * A narrative insight.
+ *
+ * Deliberately carries no trust badge, no skill state, and no correction
+ * control: narrative insights never gate deterministic execution.
+ */
+function InsightCard({
+  insight,
+  selected,
+  onSelect,
+  evidenceMatched,
+}: {
+  insight: ReportInsight;
+  selected: boolean;
+  onSelect: () => void;
+  evidenceMatched: boolean | null;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        className={`insight${selected ? " insight-selected" : ""}`}
+        onClick={onSelect}
+        aria-pressed={selected}
+      >
+        <span className="insight-head">
+          <span className="insight-label">{insight.label}</span>
+          <span className="insight-category">{titleCase(insight.category)}</span>
+        </span>
+        <span className="insight-summary">{insight.summary}</span>
+        <span className="insight-kind">Narrative insight</span>
+      </button>
+
+      {selected ? (
+        <div className="interp-detail">
+          <p className="evidence-label">Evidence</p>
+          <blockquote className="evidence-text">{insight.sourceText}</blockquote>
+          {evidenceMatched === false ? (
+            <p className="evidence-unmatched">Source location not matched</p>
+          ) : null}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
 export default function InterpretationList({
   analysis,
-  effectiveInputs,
   status,
   errorMessage,
   onRetry,
   selectedInputId,
   onSelectInput,
   evidenceMatched,
+  visibleInputs,
+  visibleInsights,
+  activeLens,
+  selectedInsightId,
+  onSelectInsight,
   onCorrect,
   onResetCorrection,
 }: {
   analysis: AnalysisResponse | null;
-  /** Effective inputs consumed by the skill engine. */
-  effectiveInputs: AnalyticalInput[] | null;
+  /** Lens-visible effective inputs. */
+  visibleInputs: AnalyticalInput[];
+  /** Lens-visible narrative insights. */
+  visibleInsights: ReportInsight[];
+  activeLens: LensId;
+  selectedInsightId: string | null;
+  onSelectInsight: (insightId: string | null) => void;
   onCorrect: (inputId: string) => void;
   onResetCorrection: (inputId: string) => void;
   status: AnalysisStatus;
@@ -298,7 +356,7 @@ export default function InterpretationList({
       </p>
 
       <ul className="interp-list">
-        {(effectiveInputs ?? analysis.inputs).map((input) => (
+        {visibleInputs.map((input) => (
           <InterpretationCard
             key={input.input_id}
             input={input}
@@ -320,9 +378,34 @@ export default function InterpretationList({
         ))}
       </ul>
 
+      {visibleInsights.length > 0 ? (
+        <ul className="interp-list insight-list">
+          {visibleInsights.map((insight) => (
+            <InsightCard
+              key={insight.id}
+              insight={insight}
+              selected={selectedInsightId === insight.id}
+              evidenceMatched={
+                selectedInsightId === insight.id ? evidenceMatched : null
+              }
+              onSelect={() =>
+                onSelectInsight(
+                  selectedInsightId === insight.id ? null : insight.id,
+                )
+              }
+            />
+          ))}
+        </ul>
+      ) : null}
+
+      {visibleInputs.length === 0 && visibleInsights.length === 0 ? (
+        <p className="placeholder">{emptyLensMessage(activeLens)}</p>
+      ) : null}
+
       <p className="panel-footnote">
-        {analysis.inputs.length} analytical inputs ·{" "}
-        {analysis.insights.length} narrative insights.
+        {visibleInputs.length} analytical inputs ·{" "}
+        {visibleInsights.length} narrative insights
+        {activeLens === "all" ? "" : " in this lens"}.
       </p>
     </>
   );
