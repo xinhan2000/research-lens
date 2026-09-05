@@ -56,6 +56,24 @@ export type GateOptions = {
   requireActual?: boolean;
   /** Basis must be explicit. On for EBITDA only. */
   requireBasis?: boolean;
+
+  /* --- analyst resolution (BUILD-6), OFF by default --- */
+  /**
+   * The analyst has explicitly selected THIS candidate to resolve a reviewable
+   * semantic conflict.
+   *
+   * Relaxes exactly three reviewable conditions and nothing else:
+   *
+   *   trust_state === "ask"
+   *   conflict_state === "material_conflict"
+   *   conflict_state === "possible_conflict"
+   *
+   * Every hard safety gate below still applies — abstain, never, missing
+   * evidence, unsupported precision, missing value, unsupported unit, missing
+   * currency, and all period/temporal/basis requirements. An analyst may
+   * resolve ambiguity; an analyst may not vouch for an unsafe input.
+   */
+  analystResolvedReview?: boolean;
 };
 
 /**
@@ -79,12 +97,13 @@ export function checkInput(
     requireTemporalType = false,
     requireActual = false,
     requireBasis = false,
+    analystResolvedReview = false,
   } = options;
 
   // ---- Universal safety (always enforced) ----
 
   // Trust state (Autonomy_Policy).
-  if (input.trust_state === "ask") {
+  if (input.trust_state === "ask" && !analystResolvedReview) {
     return {
       ok: false,
       severity: "review",
@@ -107,14 +126,14 @@ export function checkInput(
   }
 
   // Conflict state (SV-5).
-  if (input.conflict_state === "material_conflict") {
+  if (input.conflict_state === "material_conflict" && !analystResolvedReview) {
     return {
       ok: false,
       severity: "review",
       reason: `${input.metric} has a material conflict that must be resolved first.`,
     };
   }
-  if (input.conflict_state === "possible_conflict") {
+  if (input.conflict_state === "possible_conflict" && !analystResolvedReview) {
     return {
       ok: false,
       severity: "review",

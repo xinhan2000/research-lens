@@ -6,6 +6,7 @@ import AiBenchmarkComparison, {
   type BenchmarkStatus,
 } from "@/components/AiBenchmarkComparison";
 import ApiKeyDialog from "@/components/ApiKeyDialog";
+import ConflictResolutionPanel from "@/components/ConflictResolutionPanel";
 import InterpretationList from "@/components/InterpretationList";
 import ReportViewer from "@/components/ReportViewer";
 import SkillPanel from "@/components/SkillPanel";
@@ -15,6 +16,10 @@ import {
 } from "@/lib/ai-benchmark-schema";
 import { clearApiKey, readApiKey, saveApiKey } from "@/lib/api-key";
 import { runSkills } from "@/lib/skills/engine";
+import {
+  findResolvableBasisConflict,
+  type AnalystInputResolution,
+} from "@/lib/skills/resolution";
 import type { AnalysisResponse } from "@/types/analytical-input";
 import type { SampleReport } from "@/types/report";
 
@@ -50,6 +55,15 @@ export default function ResearchLensShell({
   const [benchmarkStatus, setBenchmarkStatus] = useState<BenchmarkStatus>("idle");
   const [benchmarkError, setBenchmarkError] = useState<string | null>(null);
 
+  /**
+   * Analyst resolution of a reviewable semantic conflict.
+   *
+   * Starts null and is only ever set by an explicit click. No effect, default,
+   * or heuristic chooses a basis, and the AI-only benchmark never influences it.
+   */
+  const [analystResolution, setAnalystResolution] =
+    useState<AnalystInputResolution | null>(null);
+
   const selected = reports.find((r) => r.id === selectedId) ?? reports[0];
 
   /**
@@ -57,7 +71,18 @@ export default function ResearchLensShell({
    * recomputes only when the analysis changes — no model call is involved.
    */
   const skills = useMemo(
-    () => (analysis ? runSkills(analysis.inputs) : null),
+    () => (analysis ? runSkills(analysis.inputs, analystResolution) : null),
+    [analysis, analystResolution],
+  );
+
+  /**
+   * A resolvable EBITDA basis conflict, if the analysis contains one.
+   *
+   * Purely structural detection over the validated inputs — no document id, no
+   * report-specific branching. Report D's period ambiguity produces none.
+   */
+  const basisConflict = useMemo(
+    () => (analysis ? findResolvableBasisConflict(analysis.inputs) : null),
     [analysis],
   );
 
@@ -96,6 +121,7 @@ export default function ResearchLensShell({
     setSelectedInputId(null);
     setEvidenceMatched(null);
     clearBenchmark();
+    setAnalystResolution(null);
   }
 
   const handleAnalyze = useCallback(async () => {
@@ -115,6 +141,9 @@ export default function ResearchLensShell({
     setEvidenceMatched(null);
     // A stale benchmark must not be shown beside a new analysis run.
     clearBenchmark();
+    // Input ids change between runs, so a previous selection must not carry
+    // silently into new model output.
+    setAnalystResolution(null);
 
     try {
       const response = await fetch("/api/analyze", {
@@ -298,6 +327,16 @@ export default function ResearchLensShell({
               benchmarkError={benchmarkError}
               skills={skills}
               onRunBenchmark={handleRunBenchmark}
+            />
+          ) : null}
+
+          {skills && basisConflict ? (
+            <ConflictResolutionPanel
+              conflict={basisConflict}
+              resolution={analystResolution}
+              onResolve={setAnalystResolution}
+              onShowEvidence={setSelectedInputId}
+              selectedInputId={selectedInputId}
             />
           ) : null}
 

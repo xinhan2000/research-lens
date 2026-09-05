@@ -946,3 +946,134 @@ button:disabled {
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
+
+/* ------------------------------------------------------------------ *
+ * BUILD-6 — analyst resolution of a reviewable basis conflict
+ * ------------------------------------------------------------------ */
+
+.resolve {
+  margin-top: 18px;
+  padding: 12px 13px 13px;
+  border: 1px solid #e0c68a;
+  border-radius: 6px;
+  background: #fdf9f0;
+}
+
+.resolve-title {
+  margin: 0 0 6px;
+  color: #8a6116;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.resolve-note {
+  margin: 0 0 11px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.resolve-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Both candidates are styled identically until chosen: neither is
+   recommended, and ordering follows the document, not the value. */
+.resolve-card {
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+}
+
+.resolve-card-chosen {
+  border-color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.resolve-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.resolve-basis {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.resolve-value {
+  font-size: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.resolve-period {
+  margin: 2px 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.resolve-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resolve-evidence,
+.resolve-use {
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.resolve-evidence:hover,
+.resolve-use:hover {
+  border-color: #b9c0ca;
+}
+
+.resolve-evidence-active {
+  border-color: var(--accent);
+  background: #eef3fa;
+}
+
+.resolve-use {
+  margin-left: auto;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.resolve-chosen {
+  margin-left: auto;
+  padding: 3px 9px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: #eef3fa;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.resolve-status {
+  margin: 10px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid #e8ddc4;
+  color: #8a6116;
+  font-size: 11px;
+  line-height: 1.5;
+}

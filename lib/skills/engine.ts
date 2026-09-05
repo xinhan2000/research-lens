@@ -10,6 +10,10 @@ import {
 } from "./calculations";
 import { checkInput, describeInput, toReference } from "./input-gate";
 import { isInFamily, type MetricFamily } from "./metric-family";
+import {
+  resolutionAppliesTo,
+  type AnalystInputResolution,
+} from "./resolution";
 import { blocked, needsReview, ready, type SkillResult } from "./types";
 import { toUsdMillions } from "./unit-normalization";
 
@@ -91,6 +95,16 @@ function resolveSingle(
      */
     preferLatestFiscalYear?: boolean;
   } = {},
+  /**
+   * Optional analyst resolution (BUILD-6).
+   *
+   * Applied only when it names a candidate genuinely present in THIS role's
+   * candidate set for this family and period. It is never trusted on its own:
+   * the selected input is revalidated through the same gate with only the
+   * reviewable conditions relaxed, and every downstream compatibility check
+   * still runs.
+   */
+  resolution?: AnalystInputResolution | null,
 ): Resolution {
   let candidates = byFamily(inputs, family);
 
@@ -108,6 +122,30 @@ function resolveSingle(
       reason: `${family} is not available from this report.`,
       candidates: [],
     };
+  }
+
+  // Analyst resolution: only for a candidate actually in this set, and only
+  // with the reviewable conditions relaxed. Hard gates below are unchanged, so
+  // a selected-but-unsafe input still fails.
+  const selected = resolutionAppliesTo(resolution, family, candidates);
+  if (selected) {
+    const verdict = checkInput(selected, {
+      ...options,
+      analystResolvedReview: true,
+    });
+    if (verdict.ok) {
+      const normalized = toUsdMillions(selected.value, selected.unit);
+      if (normalized === null) {
+        return {
+          kind: "block",
+          reason: `${family} could not be normalized to a common monetary scale.`,
+          candidates,
+        };
+      }
+      return { kind: "ok", input: selected, normalized };
+    }
+    // A selected candidate that fails a hard gate does not resolve anything.
+    // Fall through to normal unresolved behaviour rather than forcing a state.
   }
 
   const passing = candidates.filter((input) => checkInput(input, options).ok);
@@ -321,17 +359,26 @@ function samePeriodRatio(config: {
   labelFor: (numerator: AnalyticalInput, denominator: AnalyticalInput) => string;
   zeroReason: string;
 }) {
-  return (inputs: AnalyticalInput[]): SkillResult => {
+  return (
+    inputs: AnalyticalInput[],
+    resolution?: AnalystInputResolution | null,
+  ): SkillResult => {
     const { skillId, name, formula } = config;
     const base = { skillId, name, label: name, formula };
 
     const requireTemporalType = config.requireTemporalType ?? true;
 
-    const numerator = resolveSingle(inputs, config.numeratorMetric, {
-      requirePeriod: true,
-      requireTemporalType,
-      requireBasis: config.requireNumeratorBasis,
-    });
+    const numerator = resolveSingle(
+      inputs,
+      config.numeratorMetric,
+      {
+        requirePeriod: true,
+        requireTemporalType,
+        requireBasis: config.requireNumeratorBasis,
+      },
+      {},
+      resolution,
+    );
     if (numerator.kind !== "ok") {
       const build = numerator.kind === "review" ? needsReview : blocked;
       return build({
@@ -348,6 +395,7 @@ function samePeriodRatio(config: {
       config.denominatorMetric,
       { requirePeriod: true, requireTemporalType },
       { period: numerator.input.period },
+      resolution,
     );
     if (denominator.kind !== "ok") {
       const build = denominator.kind === "review" ? needsReview : blocked;
@@ -472,7 +520,10 @@ function evMultiple(config: {
   compute: (ev: number, denominator: number) => number | null;
   labelFor: (denominator: AnalyticalInput) => string;
 }) {
-  return (inputs: AnalyticalInput[]): SkillResult => {
+  return (
+    inputs: AnalyticalInput[],
+    resolution?: AnalystInputResolution | null,
+  ): SkillResult => {
     const { skillId, name, formula } = config;
     const base = { skillId, name, label: name, formula };
 
@@ -502,6 +553,7 @@ function evMultiple(config: {
         requireBasis: config.requireDenominatorBasis,
       },
       { preferLatestFiscalYear: true },
+      resolution,
     );
     if (denominator.kind !== "ok") {
       const build = denominator.kind === "review" ? needsReview : blocked;
@@ -572,14 +624,23 @@ const skillEvEbitda = evMultiple({
  * Public entry point
  * ------------------------------------------------------------------ */
 
-/** Runs all six MVP skills against a validated analysis. Order is stable. */
-export function runSkills(inputs: AnalyticalInput[]): SkillResult[] {
+/**
+ * Runs all six MVP skills against a validated analysis. Order is stable.
+ *
+ * `resolution` is optional. Omitting it reproduces BUILD-5 behaviour exactly;
+ * a resolution irrelevant to a skill's family is ignored. Callers never need to
+ * construct an empty resolution.
+ */
+export function runSkills(
+  inputs: AnalyticalInput[],
+  resolution?: AnalystInputResolution | null,
+): SkillResult[] {
   return [
     skillRevenueGrowth(inputs),
-    skillGrossMargin(inputs),
-    skillEbitdaMargin(inputs),
-    skillNetDebt(inputs),
-    skillEvRevenue(inputs),
-    skillEvEbitda(inputs),
+    skillGrossMargin(inputs, resolution),
+    skillEbitdaMargin(inputs, resolution),
+    skillNetDebt(inputs, resolution),
+    skillEvRevenue(inputs, resolution),
+    skillEvEbitda(inputs, resolution),
   ];
 }
