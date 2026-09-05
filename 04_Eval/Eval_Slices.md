@@ -1,14 +1,15 @@
 ---
 artifact_id: eval_slices
 product: Research Lens
-version: 0.1
+version: 0.2
 status: approved_baseline
-last_updated: 2026-09-04
+last_updated: 2026-09-05
 depends_on:
   - failure_taxonomy
   - autonomy_policy
   - semantic_input_schema
   - deterministic_skill_spec
+  - ai_only_benchmark
 used_by:
   - eval_dataset
   - eval_scorecard
@@ -799,6 +800,68 @@ Tests whether system explains what is missing clearly enough for the analyst to 
 
 ---
 
+# 12A. Comparative Benchmark Slices
+
+These slices exist only where an AI-only benchmark result is captured alongside
+the trusted path. All existing semantic slices are preserved unchanged; these
+are additional comparative views, not replacements.
+
+The purpose is **not** to reward disagreement. It is to understand:
+
+- model aggressiveness;
+- Skill restraint;
+- unnecessary Skill refusal;
+- the value of enforceable gating.
+
+## SL-C1 — Benchmark and Skill agree on a safe READY case
+
+Both produce the same result and the Skill is `READY`.
+
+This is the expected majority case on clean input, and it is a **pass**. It
+demonstrates that the trusted path is not paying for safety with accuracy — the
+difference is provenance and reproducibility, not the number.
+
+## SL-C2 — Benchmark answers while the Skill is NEEDS_REVIEW
+
+The direct model produces a number where Research Lens requires analyst
+resolution.
+
+Diagnostic question: did the model silently resolve a material ambiguity?
+
+## SL-C3 — Benchmark answers while the Skill is BLOCKED
+
+The direct model produces a number where Research Lens found a required input
+missing or unsupported.
+
+Diagnostic question: did the model infer a value the report does not state?
+
+## SL-C4 — Benchmark correctly notices ambiguity
+
+The direct model identifies competing definitions and declines or caveats.
+
+This is a **legitimate and good** model outcome. It is worth capturing precisely
+because it shows the product's value does not depend on the model failing: the
+difference is that Research Lens converts the same observation into an
+enforceable execution state rather than prose a downstream consumer may ignore.
+
+## SL-C5 — Skill may be overly conservative
+
+The benchmark gives a defensible answer that Research Lens refused to compute.
+
+Requires human review. A refusal is not automatically wrong, and a defensible
+answer is not automatically right — user intent may have been underspecified.
+These cases are the main input to tuning skill contracts.
+
+## SL-C6 — Benchmark produces a confident unsupported answer
+
+The direct model states a precise result the report does not support, while the
+Skill safely refuses.
+
+This is the clearest illustration of the product thesis, and the case class the
+trust layer exists to prevent.
+
+---
+
 # 13. Initial Dataset Composition
 
 For an initial hand-labeled eval of approximately 40 cases, recommended composition:
@@ -848,6 +911,19 @@ Every initial eval set must include at least one case for:
 - skill BLOCKED;
 - user correction;
 - unsafe-auto trap.
+
+---
+
+# 14A. Benchmark Slice Coverage
+
+No percentage allocation is set for the comparative slices yet. The benchmark
+costs an additional model call per report, the useful sample size is the
+~40–50-case dataset rather than the four sample reports, and setting quotas
+before observing real distribution would be premature.
+
+Capture comparative slices opportunistically for now, prioritising SL-C5 and
+SL-C6 — the two that most directly inform whether skill contracts are calibrated
+correctly.
 
 ---
 

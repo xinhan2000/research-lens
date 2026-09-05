@@ -16,7 +16,7 @@ depends_on:
   - sample_report_spec
   - competitor_alternatives
   - approaches_considered
-  - ai_only_baseline_comparison
+  - ai_only_benchmark
 used_by:
   - prototype
   - ai_build_prompts
@@ -161,10 +161,11 @@ The prototype supports:
 - analyst correction;
 - downstream recalculation;
 - BYOK Anthropic API configuration;
-- optional on-demand AI-only baseline comparison for EV / EBITDA.
+- optional on-demand AI-only benchmark across all six MVP Deterministic Skills.
 
-The last item is a demo comparison control, not trusted downstream analysis.
-It is displayed beside the Deterministic Skill and never feeds it.
+The last item is a direct-model control, not trusted downstream analysis. Its
+six items are displayed beside the corresponding Deterministic Skills and never
+feed them.
 
 The prototype must run:
 
@@ -506,7 +507,7 @@ READY
 
 ---
 
-## J7A — Compare with AI-only baseline
+## J7A — Compare with AI-only benchmark
 
 Optional. The analyst selects:
 
@@ -514,18 +515,21 @@ Optional. The analyst selects:
 Compare with AI-only
 ```
 
-The application makes one separate Claude request using the original report
-directly, without Research Lens interpretations or skill results.
+The application makes **one** separate Claude request using the original report
+directly, without Research Lens interpretations or skill results. That single
+request covers all six analytical tasks.
 
-The response is labeled:
+Six benchmark items return, each labeled:
 
 ```text
 UNVERIFIED
 ```
 
-and shown beside the Deterministic Skill for visual comparison.
+and each paired with its corresponding Deterministic Skill state and result for
+visual comparison.
 
-It cannot change skill inputs, skill state, or the deterministic result.
+No benchmark item can change skill inputs, skill state, or a deterministic
+result.
 
 ---
 
@@ -939,29 +943,31 @@ returns the same result for the same valid inputs.
 
 ---
 
-# 20A. AI-Only Baseline Comparison
+# 20A. AI-Only Benchmark
 
-An optional demo comparison places a raw model answer beside a Deterministic
-Skill result.
+An optional direct-model benchmark places a raw model answer beside each
+Deterministic Skill result.
 
 Rules:
 
-- EV / EBITDA only for MVP;
+- all six MVP Deterministic Skills;
+- one explicit user action produces one model call covering all six tasks;
 - on-demand — never automatic;
 - a separate model call on a separate path;
-- the result is unverified;
-- displayed side by side with the Deterministic Skill;
+- every item is unverified;
+- displayed side by side with the corresponding Deterministic Skill;
 - never a skill input;
 - never a fallback for `BLOCKED` or `NEEDS_REVIEW`.
 
 Core UI idea:
 
 ```text
-AI-only baseline   |   Deterministic Skill
+AI-only benchmark   |   Deterministic Skill
+UNVERIFIED          |   READY / NEEDS_REVIEW / BLOCKED
 ```
 
 Detailed styling is not prescribed here. See
-`05_Product_Decisions/AI_Only_Baseline_Comparison.md`.
+`05_Product_Decisions/AI_Only_Benchmark.md`.
 
 ---
 
@@ -1161,12 +1167,12 @@ It is used only for:
 
 ---
 
-## AI-only baseline
+## AI-only benchmark
 
-The AI-only baseline is also live Claude inference, but it sits deliberately
+The AI-only benchmark is also live Claude inference, but it sits deliberately
 outside the trusted interpretation and skill path.
 
-It must not use Ground Truth, and its output never becomes an
+It must not use Ground Truth, and no benchmark item ever becomes an
 `AnalyticalInput` or a skill result.
 
 ---
@@ -1348,19 +1354,22 @@ Public deployment requires no login.
 
 ## FR-21
 
-User can explicitly request an AI-only EV / EBITDA baseline comparison.
+User can explicitly request an AI-only benchmark covering all six MVP
+Deterministic Skills, produced by a single model call.
 
 ## FR-22
 
-AI-only baseline is visually labeled `UNVERIFIED`.
+Every AI-only benchmark item is visually labeled `UNVERIFIED`.
 
 ## FR-23
 
-AI-only baseline cannot change Deterministic Skill inputs, state, or result.
+AI-only benchmark items cannot change Deterministic Skill inputs, state, or
+result.
 
 ## FR-24
 
-The comparison request does not run automatically.
+The benchmark request does not run automatically, and switching reports clears
+it.
 
 ---
 
@@ -1479,20 +1488,26 @@ It should not silently create a confidently precise unsupported result.
 
 ---
 
-## SC-6 — AI-only Comparison
+## SC-6 — AI-only Benchmark
 
 Using Report A (Clean):
 
-The raw AI answer can be compared side by side with a `READY` deterministic
-result.
+All six benchmark items can be compared side by side with their `READY`
+deterministic results.
 
 Using Report C (Conflict):
 
-The raw AI answer can be compared with `NEEDS_REVIEW` and no deterministic
-result.
+Benchmark behavior on the EBITDA-dependent tasks can be compared against
+deterministic `NEEDS_REVIEW` with no result.
 
-This criterion does **not** require the AI baseline to be wrong. Matching
-numbers are a pass; the comparison is about provenance and execution
+Using Report D (Failure):
+
+The comparison may expose model aggressiveness or Skill over-caution — a
+defensible direct answer beside a conservative refusal is a useful finding, not
+a defect on either side.
+
+This criterion does **not** require the benchmark to disagree or to be wrong.
+Matching numbers are a pass; the comparison is about provenance and execution
 guarantees, not about the model failing.
 
 ---
@@ -1633,15 +1648,16 @@ Implement:
 
 ---
 
-## BUILD-5.5 — AI-only baseline comparison
+## BUILD-5.5 — AI-only benchmark
 
 Implement:
 
-- EV / EBITDA only;
+- all six MVP analytical tasks;
+- one explicit action producing one model call;
 - on-demand, never automatic;
 - a separate API path;
-- a raw, unverified result;
-- side-by-side comparison with the Deterministic Skill;
+- six raw, unverified benchmark items;
+- side-by-side comparison with the corresponding Deterministic Skills;
 - no trusted-state mutation.
 
 ---
@@ -1739,13 +1755,13 @@ If implementation time becomes constrained, prioritize in this order:
 5. Deterministic calculations
 6. Report C conflict gating
 7. User resolution
-8. AI-only baseline comparison
+8. AI-only benchmark
 9. Correction/recalculation
 10. Lenses
 11. Semantic navigation polish
 ```
 
-The AI-only comparison is deliberately ranked below evidence, semantic
+The AI-only benchmark is deliberately ranked below evidence, semantic
 qualifiers, and deterministic skill gating. It illustrates the trusted path's
 value; it is not part of it.
 
@@ -1806,4 +1822,4 @@ If asked why the prototype is intentionally small:
 | MVP-3 | Skill gating is deterministic |
 | MVP-4 | User corrections invalidate downstream results |
 | MVP-5 | Demo simplicity outweighs production architecture |
-| MVP-6 | AI-only EV / EBITDA baseline is an unverified, on-demand demo comparison and never feeds trusted execution |
+| MVP-6 | AI-only benchmark covers all six MVP Skills as an on-demand, UNVERIFIED control and never feeds trusted execution |

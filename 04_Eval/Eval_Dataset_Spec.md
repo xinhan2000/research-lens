@@ -1,15 +1,16 @@
 ---
 artifact_id: eval_dataset_spec
 product: Research Lens
-version: 0.1
+version: 0.2
 status: approved_baseline
-last_updated: 2026-09-04
+last_updated: 2026-09-05
 depends_on:
   - failure_taxonomy
   - eval_slices
   - autonomy_policy
   - semantic_input_schema
   - deterministic_skill_spec
+  - ai_only_benchmark
 used_by:
   - eval_dataset_csv
   - eval_dataset_jsonl
@@ -93,8 +94,18 @@ expected interpretation
 expected trust behavior
 expected skill behavior
 actual system output
+ai-only benchmark output (optional)
 scoring
 ```
+
+Selected cases may therefore capture three distinct things:
+
+1. **Ground Truth** — authoritative;
+2. **Research Lens trusted result/state** — the system under evaluation;
+3. **AI-only benchmark result** — a direct-model control.
+
+The benchmark section is optional. It costs an additional model call, so most
+cases will not carry it.
 
 ---
 
@@ -564,6 +575,95 @@ Model extracted both values correctly but failed to flag the basis conflict.
 
 ---
 
+# 11A. AI-Only Benchmark Output (Optional)
+
+These fields capture what a direct model answered for the same analytical task,
+without Research Lens interpretation, trust gates, or Deterministic Skills. See
+`05_Product_Decisions/AI_Only_Benchmark.md`.
+
+They are **optional** and populated only for cases where the benchmark was run.
+
+## ED-44 — `benchmark_task_id`
+
+One of the six benchmark tasks:
+
+```text
+revenue_growth
+gross_margin
+ebitda_margin
+net_debt
+ev_revenue
+ev_ebitda
+```
+
+## ED-45 — `benchmark_answer`
+
+The direct model's answer as returned, or null where it declined.
+
+## ED-46 — `benchmark_explanation`
+
+The model's brief statement of inputs used or caveat given.
+
+Deliberately **absent** from this section:
+
+```text
+benchmark_skill_state
+benchmark_trust_state
+```
+
+Those concepts belong to the Deterministic Skill layer. A benchmark answer has
+no skill status and no trust state, and giving it either would lend it
+authority it does not have.
+
+---
+
+# 11B. Comparative Scoring (Optional)
+
+Populated only where a benchmark result exists.
+
+## ED-47 — `benchmark_answered`
+
+Whether the benchmark produced a numerical answer at all.
+
+## ED-48 — `benchmark_result_correct`
+
+Whether the benchmark's answer matches Ground Truth.
+
+## ED-49 — `benchmark_unsafe_direct_answer`
+
+Whether the benchmark produced a confident answer that Ground Truth shows to be
+unsafe — for example resolving a material ambiguity silently.
+
+## ED-50 — `trusted_path_outperformed_benchmark`
+
+Comparative annotation. True where Research Lens behaved more safely or more
+correctly than the direct model.
+
+## ED-51 — `benchmark_exposed_possible_false_refusal`
+
+Comparative annotation. True where the benchmark produced a defensible answer
+that Research Lens refused to compute.
+
+> This field requires human review. A Skill refusal is not automatically wrong,
+> and a defensible direct answer is not automatically right — user intent may
+> simply have been underspecified. Treat it as a prompt for product discussion
+> rather than an automatic defect.
+
+---
+
+# 11C. Benchmark Is Not a Release Oracle
+
+`overall_pass` (ED-42) is **not** redefined to depend on benchmark performance.
+
+Research Lens release pass/fail remains based on trusted system behavior. The
+benchmark is comparative evidence, not an oracle:
+
+- benchmark correctness cannot excuse unsafe trusted behavior;
+- benchmark failure is not required for Research Lens to pass;
+- disagreement is diagnostic, not inherently a defect on either side.
+
+---
+
 # 12. Recommended CSV Columns
 
 For spreadsheet-friendly evaluation:
@@ -619,9 +719,23 @@ unsafe_auto_use
 failure_ids_observed
 overall_pass
 review_notes
+benchmark_task_id
+benchmark_answer
+benchmark_explanation
+benchmark_answered
+benchmark_result_correct
+benchmark_unsafe_direct_answer
+trusted_path_outperformed_benchmark
+benchmark_exposed_possible_false_refusal
 ```
 
 For cases with multiple expected inputs, JSONL is preferred.
+
+---
+
+The final eight columns are optional benchmark fields appended to the end, so
+existing column order and tooling remain unchanged. Leave them empty for cases
+where the benchmark was not run.
 
 ---
 

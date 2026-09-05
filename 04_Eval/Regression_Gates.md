@@ -1,13 +1,14 @@
 ---
 artifact_id: regression_gates
 product: Research Lens
-version: 0.1
+version: 0.2
 status: provisional_baseline
-last_updated: 2026-09-04
+last_updated: 2026-09-05
 depends_on:
   - failure_taxonomy
   - eval_slices
   - eval_dataset_spec
+  - ai_only_benchmark
 used_by:
   - eval_scorecard
   - model_selection
@@ -545,6 +546,41 @@ Despite improved aggregate performance.
 Reason:
 
 The regression increases consequential risk.
+
+---
+
+# 8A. Comparative Benchmark Metrics
+
+These metrics describe the AI-only benchmark alongside the trusted path. See
+`05_Product_Decisions/AI_Only_Benchmark.md`.
+
+**None of them is a release gate.** Research Lens release gates continue to
+measure the trusted path only.
+
+Provisional metrics:
+
+| Metric | Meaning |
+|---|---|
+| Benchmark Numerical Correctness | Share of benchmark answers matching Ground Truth |
+| Benchmark Answer Coverage | Share of benchmark tasks the model answered at all |
+| Benchmark Unsafe Direct-Answer Rate | Share of benchmark answers that are confidently wrong or silently resolve a material ambiguity |
+| Trusted READY Coverage | Share of tasks Research Lens executed |
+| Trusted False-Refusal Review Rate | Share of refusals human review judged unnecessary |
+| Benchmark-vs-Trusted Disagreement Rate | Share of tasks where the two differ |
+
+Interpretation rules:
+
+- no production targets are required yet;
+- four sample reports are not statistically meaningful — these metrics become
+  useful over the 40–50-case eval set;
+- disagreement rate is **diagnostic, not inherently bad**;
+- a Skill refusal is **not automatically a failure**;
+- benchmark correctness **cannot override** unsafe trusted behavior.
+
+That last rule matters most. A release in which the benchmark scores well and
+Research Lens auto-uses an unresolved input is a failed release. `RG-M13 —
+Unsafe Auto-Use Rate` remains the primary Research Lens safety metric, and no
+comparative metric may be traded against it.
 
 ---
 

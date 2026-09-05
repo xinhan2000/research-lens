@@ -1,12 +1,12 @@
 ---
 artifact_id: prototype_build_plan
 product: Research Lens
-version: 0.2
+version: 0.3
 status: approved_baseline
-last_updated: 2026-09-04
+last_updated: 2026-09-05
 depends_on:
   - PRD.md
-  - AI_Only_Baseline_Comparison.md
+  - AI_Only_Benchmark.md
   - Semantic_Input_Schema.md
   - Deterministic_Skill_Spec.md
   - Autonomy_Policy.md
@@ -17,7 +17,7 @@ used_by:
   - 03_Claude_Integration.md
   - 04_Evidence_UI.md
   - 05_Skill_Engine.md
-  - 05_5_AI_Only_Comparison.md
+  - 05_5_AI_Only_Benchmark.md
   - 06_Conflict_Flow.md
   - 07_Correction_Flow.md
   - 08_Lenses_and_Navigation.md
@@ -62,8 +62,9 @@ Primary implementation priorities:
 - External research: none
 - Vector database / RAG: none
 - Agent framework: none unless a concrete blocker appears
-- AI-only comparison: on-demand EV / EBITDA baseline only
-- Comparison is isolated from trusted Skill execution
+- AI-only benchmark: all six MVP Skills
+- One explicit user action, one separate model call
+- Benchmark isolated from trusted Skill execution
 
 ## 3. Repository Assumption
 
@@ -163,7 +164,7 @@ The prototype should say:
 - user resolution of Report C conflict;
 - user correction;
 - downstream invalidation/recalculation;
-- on-demand AI-only vs Deterministic Skill comparison for EV / EBITDA;
+- on-demand six-task AI-only benchmark vs Deterministic Skills;
 - local execution;
 - Fly.io deployment.
 
@@ -263,24 +264,26 @@ Acceptance gate:
 - math is covered by tests;
 - no LLM is used inside skills.
 
-### BUILD-5.5 — AI-Only Baseline Comparison
+### BUILD-5.5 — AI-Only Benchmark
 
 Objective:
 
-Add an optional direct-AI comparison for EV / EBITDA after the trusted Skill
-engine exists.
+Add one direct-model benchmark run covering all six supported analytical tasks,
+after the trusted Skill engine exists.
 
 Acceptance gate:
 
-- baseline runs only on explicit user request;
-- exactly one separate Claude call;
+- benchmark runs only on explicit user request;
+- exactly one separate Claude call for all six tasks;
 - report text is used directly;
-- baseline is labeled `UNVERIFIED`;
-- baseline does not consume `AnalyticalInput` objects;
-- baseline cannot affect Skill state;
-- Clean can show AI-only beside `READY`;
-- Conflict can show AI-only beside `NEEDS_REVIEW`;
-- no requirement that the AI-only answer be wrong.
+- six benchmark task IDs are returned;
+- every item is labeled `UNVERIFIED`;
+- benchmark does not consume `AnalyticalInput` or `SkillResult` objects;
+- benchmark cannot affect Skill state;
+- Clean shows an all-six comparison;
+- Conflict shows benchmark answers beside deterministic `NEEDS_REVIEW`;
+- Failure shows benchmark answers beside mixed READY / NEEDS_REVIEW / BLOCKED;
+- no requirement that the benchmark answer be wrong.
 
 ---
 
@@ -379,7 +382,8 @@ Confirm Claude output is truly structured and source-linked.
 Confirm deterministic skills cannot resolve semantic ambiguity.
 
 ### BUILD-5.5
-Confirm the baseline is visually separated from the trusted path and cannot
+Confirm all six benchmark items pair correctly with their Skills, that the
+benchmark is visually separated from the trusted path, and that it cannot
 mutate skill state.
 
 ### BUILD-6
@@ -429,7 +433,7 @@ If time becomes constrained:
 5. Deterministic skills
 6. Report C conflict gating
 7. Conflict resolution
-8. AI-only comparison
+8. AI-only benchmark
 9. Correction/recalculation
 10. Lenses
 11. Visual polish
@@ -450,8 +454,8 @@ Step 9 build execution is complete when:
 - Report D exposes difficult behavior without silently fabricating precision;
 - user corrections propagate correctly;
 - deterministic calculations are tested;
-- EV / EBITDA AI-only comparison can be invoked on-demand;
-- comparison remains isolated from downstream deterministic execution;
+- the six-task AI-only benchmark can be invoked on-demand;
+- the benchmark remains isolated from downstream deterministic execution;
 - eval harness can be run;
 - application deploys to Fly.io.
 

@@ -111,24 +111,27 @@ Make the reason explicit:
 
 > Multiple valid FY2025 EBITDA definitions were found.
 
-## Relationship to the BUILD-5.5 AI-only baseline
+## Relationship to the BUILD-5.5 AI-only benchmark
 
-If an AI-only baseline response is already on screen from BUILD-5.5:
+If a six-item AI-only benchmark is already on screen from BUILD-5.5:
 
 - user basis selection affects **ONLY** the Deterministic Skill path;
-- the existing AI-only baseline response remains `UNVERIFIED`;
-- do not rewrite the baseline after user resolution;
-- do not use the baseline answer as a candidate resolution;
-- do not automatically rerun the baseline when the user selects Adjusted or
-  Reported.
+- every benchmark item remains `UNVERIFIED` and unchanged;
+- do not rewrite any benchmark item after user resolution;
+- do not feed benchmark output into resolution, or treat the benchmark's
+  EV / EBITDA or EBITDA Margin answer as the resolution;
+- do not use the benchmark's choice as the default basis;
+- do not automatically rerun the benchmark when the user selects Adjusted or
+  Reported;
+- the other benchmark items are likewise untouched.
 
-The contrast is intentional:
+The benchmark is the raw pre-resolution control. The contrast is intentional:
 
 ```text
-AI-only raw response   vs   user-resolved deterministic execution
+AI-only raw answer   vs   user-resolved deterministic execution
 ```
 
-Leaving the earlier baseline untouched is what makes that contrast legible.
+Leaving the earlier benchmark untouched is what makes that contrast legible.
 
 ## Tests
 

@@ -1,7 +1,7 @@
 ---
 artifact_id: claude_code_prompt_09_eval_harness
 product: Research Lens
-version: 0.1
+version: 0.2
 build_step: BUILD-9
 ---
 
@@ -17,6 +17,7 @@ Read:
 - `04_Eval/Regression_Gates.md`
 - `04_Eval/Failure_Taxonomy.md`
 - `04_Eval/Eval_Slices.md`
+- `05_Product_Decisions/AI_Only_Benchmark.md`
 - `03_Sample_Data/Ground_Truth.jsonl`
 - `08_Build_Log/Prototype_Build_Plan.md`
 
@@ -107,6 +108,61 @@ Must be checked carefully for:
 - internal target vs formal forecast;
 - no numeric value fabricated from qualitative margin language.
 
+## Optional three-way evaluation
+
+The harness should support an **optional** comparison of three distinct things:
+
+```text
+Ground Truth
+    vs
+Research Lens trusted path
+    vs
+AI-only benchmark
+```
+
+Ground Truth is authoritative. Research Lens is the system under evaluation. The
+AI-only benchmark is a control.
+
+Benchmark evaluation must be **configurable and off by default**, because it
+costs an additional model call per report. Do not require every eval case to run
+it — a flag such as `--benchmark` is appropriate.
+
+Where enabled:
+
+- use the same six benchmark task catalog as BUILD-5.5 (`revenue_growth`,
+  `gross_margin`, `ebitda_margin`, `net_debt`, `ev_revenue`, `ev_ebitda`);
+- make **one benchmark call per applicable document/report**, never one per
+  Skill;
+- never provide Ground Truth to the benchmark;
+- never provide Research Lens output — interpretations, skill results, trust or
+  conflict states — to the benchmark;
+- store benchmark outputs separately from trusted outputs;
+- score benchmark correctness separately;
+- report comparative disagreements.
+
+Critically:
+
+> A benchmark result must never alter Research Lens pass/fail.
+
+The benchmark is comparative evidence, not a release oracle. A well-scoring
+benchmark cannot excuse unsafe trusted behavior, and a Skill refusal the
+benchmark answered is not automatically a failure — it may be a correctly
+underspecified request, which is a question for human review.
+
+## Suggested scorecard sections
+
+Keep the three concerns visually separate so they are never conflated:
+
+```text
+Research Lens trusted metrics
+AI-only benchmark metrics
+Comparative diagnostics
+```
+
+Comparative diagnostics may include disagreement cases, possible false
+refusals, and unsafe direct answers — reported for review rather than scored
+automatically.
+
 ## Output
 
 Console output should be readable.
@@ -146,6 +202,8 @@ The eval harness should focus on end-to-end behavior.
 4. Report C unsafe automatic calculation is a clear failure.
 5. No API key is exposed.
 6. Eval failures do not crash without useful diagnostics.
+7. Benchmark evaluation is optional, off by default, and never changes Research
+   Lens pass/fail.
 
 ## At completion
 
