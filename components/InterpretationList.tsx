@@ -5,12 +5,14 @@ import { useState } from "react";
 import type { AnalysisResponse, AnalyticalInput } from "@/types/analytical-input";
 
 /**
- * Right panel: validated analytical inputs.
+ * Right panel: validated analytical inputs from live Claude inference.
  *
  * Display only. No calculation, no ratios, no skill state — those arrive in
  * BUILD-5. Presentation helpers below format existing values; they never
  * derive new analytical facts.
  */
+
+export type AnalysisStatus = "idle" | "analyzing" | "success" | "error";
 
 const UNIT_SUFFIX: Record<string, string> = {
   USD_thousands: "K",
@@ -18,23 +20,44 @@ const UNIT_SUFFIX: Record<string, string> = {
   USD_billions: "B",
 };
 
-/** Formats an already-interpreted value. Performs no unit conversion. */
-function formatValue(input: AnalyticalInput): string {
-  if (input.value === null) {
-    return input.precision === "qualitative" ? "Qualitative" : "No value";
-  }
-
-  const amount = input.value.toLocaleString("en-US", {
+/**
+ * Formats one already-interpreted number using the input's unit and currency.
+ * Performs no unit conversion and no arithmetic.
+ */
+function formatAmount(amount: number, input: AnalyticalInput): string {
+  const formatted = amount.toLocaleString("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
 
-  if (input.unit === "percent") return `${amount}%`;
-  if (input.unit === "multiple") return `${amount}×`;
+  if (input.unit === "percent") return `${formatted}%`;
+  if (input.unit === "multiple") return `${formatted}×`;
 
   const suffix = UNIT_SUFFIX[input.unit] ?? "";
   const symbol = input.currency === "USD" ? "$" : "";
-  return `${symbol}${amount}${suffix}`;
+  return `${symbol}${formatted}${suffix}`;
+}
+
+/**
+ * Renders the displayable value of an analytical input.
+ *
+ * A ranged input carries its value in `range` rather than `value`, so both
+ * bounds are shown. The range is never collapsed to a midpoint or a single
+ * bound — preserving it is the point (Semantic_Input_Schema SI-9 / SV-9).
+ */
+function formatValue(input: AnalyticalInput): string {
+  if (input.precision === "range" && input.range !== null) {
+    return `${formatAmount(input.range.min, input)}–${formatAmount(
+      input.range.max,
+      input,
+    )}`;
+  }
+
+  if (input.value !== null) {
+    return formatAmount(input.value, input);
+  }
+
+  return input.precision === "qualitative" ? "Qualitative" : "No value";
 }
 
 function titleCase(token: string): string {
@@ -103,24 +126,45 @@ function InterpretationCard({
 
 export default function InterpretationList({
   analysis,
+  status,
+  errorMessage,
+  onRetry,
 }: {
   analysis: AnalysisResponse | null;
+  status: AnalysisStatus;
+  errorMessage: string | null;
+  onRetry: () => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  if (status === "analyzing") {
+    return <p className="placeholder">Analyzing report…</p>;
+  }
+
+  if (status === "error") {
+    return (
+      <div className="analysis-error">
+        <p>{errorMessage ?? "Analysis failed. Retry."}</p>
+        <button type="button" onClick={onRetry}>
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (!analysis) {
     return (
       <p className="placeholder">
-        Interpretation fixture not available for this report yet.
+        Run analysis to generate source-linked analytical inputs.
       </p>
     );
   }
 
   return (
     <>
-      <p className="fixture-note">
-        Development fixture — not live model output. Validated against the
-        AnalysisResponse schema before rendering.
+      <p className="live-note">
+        Live model output — validated against the AnalysisResponse schema before
+        rendering.
       </p>
 
       <ul className="interp-list">

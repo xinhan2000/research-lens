@@ -275,13 +275,13 @@ button:disabled {
  * BUILD-2 — interpretation list (right panel)
  * ------------------------------------------------------------------ */
 
-.fixture-note {
+.live-note {
   margin: 0 0 12px;
   padding: 7px 9px;
-  border: 1px dashed var(--border);
+  border: 1px solid #b9d3b2;
   border-radius: 5px;
-  background: var(--bg);
-  color: var(--muted);
+  background: #f1f8ef;
+  color: #2f6b34;
   font-size: 11px;
   line-height: 1.45;
 }
@@ -405,4 +405,86 @@ button:disabled {
   border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ *
+ * BUILD-3 — BYOK dialog, analysis states
+ * ------------------------------------------------------------------ */
+
+.key-state-on {
+  color: #2f6b34;
+  font-weight: 600;
+}
+
+.analysis-error {
+  padding: 10px 12px;
+  border: 1px solid #d8b6b6;
+  border-radius: 6px;
+  background: #fbf1f1;
+  color: #8c3b3b;
+  font-size: 13px;
+}
+
+.analysis-error p {
+  margin: 0 0 9px;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 24, 28, 0.42);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 420px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18);
+}
+
+.dialog-title {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.dialog-label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dialog-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dialog-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dialog-spacer {
+  flex: 1;
 }

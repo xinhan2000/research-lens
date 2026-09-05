@@ -1,27 +1,89 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import ApiKeyDialog from "@/components/ApiKeyDialog";
 import InterpretationList from "@/components/InterpretationList";
 import ReportViewer from "@/components/ReportViewer";
+import { clearApiKey, readApiKey, saveApiKey } from "@/lib/api-key";
 import type { AnalysisResponse } from "@/types/analytical-input";
 import type { SampleReport } from "@/types/report";
 
-/** Static for BUILD-1. Lens filtering arrives in BUILD-8. */
+/** Static for BUILD-3. Lens filtering arrives in BUILD-8. */
 const LENSES = ["All", "Financials", "Risks", "Timeline", "Assumptions"];
+
+/** One Claude call is one operation — no fabricated sub-stages. */
+type AnalysisStatus = "idle" | "analyzing" | "success" | "error";
 
 export default function ResearchLensShell({
   reports,
-  analysisByReportId,
 }: {
   reports: SampleReport[];
-  /** Validated interpretation per report. BUILD-2 supplies Report A only. */
-  analysisByReportId: Record<string, AnalysisResponse>;
 }) {
   const [selectedId, setSelectedId] = useState(reports[0]?.id ?? "");
+  const [keyConfigured, setKeyConfigured] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [status, setStatus] = useState<AnalysisStatus>("idle");
+  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const selected = reports.find((r) => r.id === selectedId) ?? reports[0];
-  const analysis = analysisByReportId[selected.id] ?? null;
+
+  // sessionStorage is unavailable during server render.
+  useEffect(() => {
+    setKeyConfigured(readApiKey() !== null);
+  }, []);
+
+  /** Switching reports must never leave another report's analysis on screen. */
+  function handleSelectReport(id: string) {
+    setSelectedId(id);
+    setAnalysis(null);
+    setStatus("idle");
+    setErrorMessage(null);
+  }
+
+  const handleAnalyze = useCallback(async () => {
+    const apiKey = readApiKey();
+    if (!apiKey) {
+      setKeyConfigured(false);
+      setStatus("error");
+      setErrorMessage("Anthropic API key required to analyze this report.");
+      setDialogOpen(true);
+      return;
+    }
+
+    setStatus("analyzing");
+    setErrorMessage(null);
+    setAnalysis(null);
+
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          apiKey,
+          documentId: selected.id,
+          reportText: selected.content,
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setStatus("error");
+        setErrorMessage(payload?.error?.message ?? "Analysis failed. Retry.");
+        return;
+      }
+
+      setAnalysis(payload.analysis as AnalysisResponse);
+      setStatus("success");
+    } catch {
+      setStatus("error");
+      setErrorMessage("Analysis failed. Retry.");
+    }
+  }, [selected]);
+
+  const analyzing = status === "analyzing";
 
   return (
     <div className="shell">
@@ -39,7 +101,8 @@ export default function ResearchLensShell({
             <span className="selector-label">Sample report</span>
             <select
               value={selected.id}
-              onChange={(event) => setSelectedId(event.target.value)}
+              onChange={(event) => handleSelectReport(event.target.value)}
+              disabled={analyzing}
             >
               {reports.map((report) => (
                 <option key={report.id} value={report.id}>
@@ -49,18 +112,20 @@ export default function ResearchLensShell({
             </select>
           </label>
 
-          <button type="button" disabled title="Available in a later build step">
-            Set Anthropic API Key
+          <button type="button" onClick={() => setDialogOpen(true)}>
+            {keyConfigured ? "Replace Key" : "Set Anthropic API Key"}
           </button>
-          <span className="key-state">Not configured</span>
+          <span className={`key-state${keyConfigured ? " key-state-on" : ""}`}>
+            {keyConfigured ? "Configured" : "Not configured"}
+          </span>
 
           <button
             type="button"
             className="primary"
-            disabled
-            title="Available in a later build step"
+            onClick={handleAnalyze}
+            disabled={analyzing}
           >
-            Analyze Report
+            {analyzing ? "Analyzing…" : "Analyze Report"}
           </button>
         </div>
       </header>
@@ -83,7 +148,7 @@ export default function ResearchLensShell({
           <h2 className="panel-title">Semantic Navigation</h2>
           <p className="placeholder">
             AI-generated analytical organization of the report appears here once
-            analysis is implemented.
+            navigation is implemented.
           </p>
         </section>
 
@@ -97,9 +162,35 @@ export default function ResearchLensShell({
 
         <section className="panel panel-analysis" aria-label="Analysis and skills">
           <h2 className="panel-title">Analysis / Skills</h2>
-          <InterpretationList analysis={analysis} />
+          <InterpretationList
+            analysis={analysis}
+            status={status}
+            errorMessage={errorMessage}
+            onRetry={handleAnalyze}
+          />
         </section>
       </main>
+
+      {dialogOpen ? (
+        <ApiKeyDialog
+          configured={keyConfigured}
+          onSave={(key) => {
+            saveApiKey(key);
+            setKeyConfigured(readApiKey() !== null);
+            setDialogOpen(false);
+            if (status === "error") {
+              setStatus("idle");
+              setErrorMessage(null);
+            }
+          }}
+          onClear={() => {
+            clearApiKey();
+            setKeyConfigured(false);
+            setDialogOpen(false);
+          }}
+          onClose={() => setDialogOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
