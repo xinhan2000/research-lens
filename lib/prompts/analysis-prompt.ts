@@ -55,6 +55,12 @@ basis for it, use management_defined. Do not use reported merely because the
 value appears in the report — reported is an accounting basis, not a record of
 where the number was found.
 
+Where the report describes a figure as "reported" and states no more specific
+accounting basis for it, use reported. Do not infer gaap from the expenses a
+figure happens to include — a reported measure that is stated after
+restructuring, stock-based compensation, or similar charges is still reported.
+Use gaap only where the source itself identifies the figure as GAAP.
+
 precision distinguishes: exact, approximate, range, qualitative, unknown.
 
 ## Precision rules

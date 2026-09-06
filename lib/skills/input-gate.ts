@@ -245,13 +245,26 @@ export function checkInput(
   return { ok: true };
 }
 
+/**
+ * Bases named explicitly in a result label.
+ *
+ * Only the bases a consuming skill can actually distinguish between are shown,
+ * so a label never implies a distinction the input does not carry. `gaap`
+ * renders as "GAAP" rather than "Gaap", and is never displayed as "Reported":
+ * a result computed from a GAAP figure must say so.
+ */
+const BASIS_LABEL: Partial<Record<AnalyticalInput["basis"], string>> = {
+  adjusted: "Adjusted",
+  reported: "Reported",
+  gaap: "GAAP",
+};
+
 /** Human-readable label preserving the semantics that matter. */
 export function describeInput(input: AnalyticalInput): string {
   const parts: string[] = [];
   if (input.period) parts.push(input.period);
-  if (input.basis === "adjusted" || input.basis === "reported") {
-    parts.push(input.basis.charAt(0).toUpperCase() + input.basis.slice(1));
-  }
+  const basis = BASIS_LABEL[input.basis];
+  if (basis) parts.push(basis);
   // Use the family's canonical noun so a basis-qualified metric label such as
   // "Adjusted EBITDA" does not render as "Adjusted Adjusted EBITDA".
   parts.push(metricFamily(input.metric) ?? input.metric);

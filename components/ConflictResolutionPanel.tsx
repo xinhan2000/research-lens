@@ -35,8 +35,25 @@ function formatCandidate(input: AnalyticalInput): string {
   return `${symbol}${amount}${suffix}`;
 }
 
+/**
+ * Display names for the bases this panel can offer.
+ *
+ * The label always reflects the basis the model actually emitted. A GAAP
+ * candidate reads "GAAP EBITDA" — never "Reported EBITDA" — because the analyst
+ * is choosing between the definitions the report supports, and mislabelling one
+ * would misrepresent the choice being made.
+ */
+const BASIS_LABEL: Partial<Record<AnalyticalInput["basis"], string>> = {
+  adjusted: "Adjusted",
+  reported: "Reported",
+  gaap: "GAAP",
+};
+
 function basisLabel(input: AnalyticalInput): string {
-  return input.basis.charAt(0).toUpperCase() + input.basis.slice(1);
+  return (
+    BASIS_LABEL[input.basis] ??
+    input.basis.charAt(0).toUpperCase() + input.basis.slice(1)
+  );
 }
 
 export default function ConflictResolutionPanel({

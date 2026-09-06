@@ -25,6 +25,26 @@ const reported: AnalystInputResolution = {
   selectedInputId: "c_ebitda_reported",
 };
 
+/**
+ * The exact structural shape observed in a public run: the model classified an
+ * explicitly "reported" EBITDA as `gaap`. Only the comparator's basis differs
+ * from the standard conflict fixture — same ids, values, period, trust and
+ * conflict states — so these tests isolate that one field.
+ */
+function adjustedGaapConflictInputs() {
+  return reportCInputs().map((input) =>
+    input.input_id === "c_ebitda_reported"
+      ? { ...input, basis: "gaap" as const }
+      : input,
+  );
+}
+
+const gaapComparator: AnalystInputResolution = {
+  family: "EBITDA",
+  period: "FY2025",
+  selectedInputId: "c_ebitda_reported",
+};
+
 /* ------------------------------------------------------------------ *
  * Engine resolution — the hero transition
  * ------------------------------------------------------------------ */
@@ -306,5 +326,127 @@ describe("resolvable basis conflict detection", () => {
       makeInput({ input_id: "b", metric: "EBITDA", value: 14.2, period: "FY2025", basis: "reported" }),
     ];
     expect(findResolvableBasisConflict(inputs)).toBeNull();
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * Recovery robustness — adjusted vs an explicit GAAP comparator
+ *
+ * A live run classified an explicitly "reported EBITDA" figure as `gaap`. The
+ * skill gate behaved correctly (EV / EBITDA stayed NEEDS_REVIEW) but the
+ * detector required `reported` exactly, so the analyst lost the control that
+ * resolves it — fail-safe, but unrecoverable. These tests pin the recovery
+ * without loosening execution safety or rewriting anyone's basis.
+ * ------------------------------------------------------------------ */
+
+describe("adjusted vs GAAP comparator recovery", () => {
+  it("A. the original adjusted + reported contract still detects", () => {
+    const group = findResolvableBasisConflict(reportCInputs());
+    expect(group).not.toBeNull();
+    expect(group!.candidates.map((c) => c.basis)).toEqual([
+      "adjusted",
+      "reported",
+    ]);
+  });
+
+  it("B. adjusted + gaap in one period is now detected", () => {
+    const group = findResolvableBasisConflict(adjustedGaapConflictInputs());
+    expect(group).not.toBeNull();
+    expect(group!.family).toBe("EBITDA");
+    expect(group!.period).toBe("FY2025");
+    expect(group!.candidates).toHaveLength(2);
+  });
+
+  it("C. candidate semantics are preserved — no gaap -> reported rewrite", () => {
+    const inputs = adjustedGaapConflictInputs();
+    const group = findResolvableBasisConflict(inputs)!;
+
+    // Bases are returned exactly as the model emitted them, in document order.
+    expect(group.candidates.map((c) => c.basis)).toEqual(["adjusted", "gaap"]);
+    expect(group.candidates.map((c) => c.input_id)).toEqual([
+      "c_ebitda_adj",
+      "c_ebitda_reported",
+    ]);
+    expect(JSON.stringify(group)).not.toContain('"reported"');
+
+    // The source array and its objects are untouched.
+    expect(inputs.find((i) => i.input_id === "c_ebitda_reported")!.basis).toBe(
+      "gaap",
+    );
+  });
+
+  it("D. detection alone does not execute anything", () => {
+    const results = runSkills(adjustedGaapConflictInputs());
+    for (const skillId of ["skill_ev_ebitda", "skill_ebitda_margin"]) {
+      const r = bySkill(results, skillId);
+      expect(r.status).toBe("NEEDS_REVIEW");
+      expect(r.value).toBeUndefined();
+    }
+  });
+
+  it("E. selecting adjusted computes EV / EBITDA from 18.6", () => {
+    const r = bySkill(
+      runSkills(adjustedGaapConflictInputs(), adjusted),
+      "skill_ev_ebitda",
+    );
+    expect(r.status).toBe("READY");
+    expect(r.value).toBeCloseTo(650 / 18.6, 9);
+    expect(r.label).toBe("EV / FY2025 Adjusted EBITDA");
+  });
+
+  it("F. selecting the GAAP comparator computes from 14.2 and says GAAP", () => {
+    const inputs = adjustedGaapConflictInputs();
+
+    const ev = bySkill(runSkills(inputs, gaapComparator), "skill_ev_ebitda");
+    expect(ev.status).toBe("READY");
+    expect(ev.value).toBeCloseTo(650 / 14.2, 9);
+    // The label must name the basis actually used, never "Reported".
+    expect(ev.label).toBe("EV / FY2025 GAAP EBITDA");
+    expect(ev.label).not.toContain("Reported");
+    expect(ev.label).not.toContain("Gaap");
+
+    const margin = bySkill(
+      runSkills(inputs, gaapComparator),
+      "skill_ebitda_margin",
+    );
+    expect(margin.status).toBe("READY");
+    expect(margin.value).toBeCloseTo(14.2 / 101, 9);
+    expect(margin.inputs.some((i) => i.label.includes("GAAP"))).toBe(true);
+  });
+
+  it("G. the comparator set stays closed: unknown and non_gaap do not qualify", () => {
+    for (const basis of ["unknown", "non_gaap", "management_defined", "pro_forma", "consensus", "not_applicable"] as const) {
+      const inputs = [
+        makeInput({ input_id: "a", metric: "EBITDA", value: 18.6, period: "FY2025", basis: "adjusted" }),
+        makeInput({ input_id: "b", metric: "EBITDA", value: 14.2, period: "FY2025", basis }),
+      ];
+      expect(findResolvableBasisConflict(inputs), basis).toBeNull();
+    }
+  });
+
+  it("H. adjusted + reported + gaap fails closed — three ways is not two", () => {
+    const inputs = [
+      makeInput({ input_id: "a", metric: "EBITDA", value: 18.6, period: "FY2025", basis: "adjusted" }),
+      makeInput({ input_id: "b", metric: "EBITDA", value: 14.2, period: "FY2025", basis: "reported" }),
+      makeInput({ input_id: "c", metric: "EBITDA", value: 15.1, period: "FY2025", basis: "gaap" }),
+    ];
+    expect(findResolvableBasisConflict(inputs)).toBeNull();
+  });
+
+  it("I. hard gates still win over an analyst GAAP selection", () => {
+    // Offering the choice must not widen what a choice can authorise.
+    const inputs = adjustedGaapConflictInputs().map((input) =>
+      input.input_id === "c_ebitda_reported"
+        ? { ...input, precision: "approximate" as const }
+        : input,
+    );
+
+    // Still offerable — precision is not part of the detector's contract.
+    expect(findResolvableBasisConflict(inputs)).not.toBeNull();
+
+    // But not executable: approximate is a universal gate the analyst cannot relax.
+    const r = bySkill(runSkills(inputs, gaapComparator), "skill_ev_ebitda");
+    expect(r.status).not.toBe("READY");
+    expect(r.value).toBeUndefined();
   });
 });

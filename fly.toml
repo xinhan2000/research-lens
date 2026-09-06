@@ -1,0 +1,29 @@
+# Research Lens — Fly.io configuration.
+#
+# The application holds no secrets. The visitor supplies their own Anthropic
+# API key per browser session, so no Fly secret is required to run this.
+
+app = "research-lens-xh"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_start_machines = true
+  # Kept warm on purpose: a cold start would land immediately before an
+  # operation that already takes 7-15 seconds.
+  auto_stop_machines = "off"
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
