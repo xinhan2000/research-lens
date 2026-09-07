@@ -15,6 +15,9 @@ sentence it came from.
 
 Live application: https://research-lens-xh.fly.dev
 
+**Want to understand the product decisions behind Research Lens?**  
+See [`Product_Design_QA.md`](./Product_Design_QA.md)
+
 ## What Research Lens Does
 
 Financial reports are full of numbers that look interchangeable and are not. Adjusted and
